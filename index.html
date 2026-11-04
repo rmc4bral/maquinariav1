@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventario de Maquinarias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Fuente: Articulat CF (licenciada). Se usa si está instalada en el equipo; para incrustarla, agregá url("fonts/ArticulatCF-Regular.woff2") a cada src. */
+@font-face{font-family:"Articulat CF";font-weight:400;src:local("Articulat CF"),local("ArticulatCF-Regular")}
+@font-face{font-family:"Articulat CF";font-weight:500;src:local("Articulat CF Medium"),local("ArticulatCF-Medium")}
+@font-face{font-family:"Articulat CF";font-weight:600;src:local("Articulat CF DemiBold"),local("ArticulatCF-DemiBold")}
+@font-face{font-family:"Articulat CF";font-weight:700;src:local("Articulat CF Bold"),local("ArticulatCF-Bold")}
+
+:root{
+  --font:"Articulat CF","Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --bg:#f3f6f4; --card:#ffffff; --line:#e3e9e6; --line-2:#eef2f0;
+  --ink:#0d1f19; --muted:#66756f; --faint:#98a5a0;
+  --side:#0f3a2f; --side-2:#17483b; --side-line:rgba(255,255,255,.09); --side-ink:#d9ebe4; --side-muted:#8fb3a6;
+  --mint:#3ee0b2; --green:#16a96a; --green-ink:#0b7a4b; --green-soft:#e6f7ee; --green-line:#c9ecd9;
+  --red:#e5484d; --red-soft:#fdecec;
+  --r-lg:18px; --r-md:12px; --r-sm:9px;
+  --shadow:0 1px 2px rgba(13,31,25,.04),0 6px 18px -8px rgba(13,31,25,.10);
+  --pop:0 18px 40px -12px rgba(13,31,25,.28),0 2px 6px rgba(13,31,25,.08);
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:12.5px;line-height:1.4;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit;color:inherit}
+.ic{display:block;flex:none}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:268px minmax(0,1fr);height:100dvh}
+
+/* ---------- Sidebar ---------- */
+.side{background:var(--side);color:var(--side-ink);display:flex;flex-direction:column;padding:18px 14px 14px;gap:6px;min-height:0;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 8px 16px;border-bottom:1px dashed var(--side-line);margin-bottom:10px}
+.brand .logo{width:38px;height:38px;border-radius:11px;background:var(--side-2);display:grid;place-items:center;color:var(--mint)}
+.brand b{display:block;font-size:15px;font-weight:700;color:#fff;letter-spacing:.1px}
+.brand small{color:var(--side-muted);font-size:12px}
+.sec{font-size:11px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--side-muted);padding:12px 10px 6px}
+.nav{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border-radius:11px;color:var(--side-ink);font-weight:500;text-align:left;position:relative;transition:background .15s}
+.nav:hover{background:rgba(255,255,255,.06)}
+.nav.active{background:linear-gradient(90deg,rgba(62,224,178,.16),rgba(62,224,178,.05));color:#fff}
+.nav.active::after{content:"";position:absolute;right:0;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--mint)}
+.nav .badge{margin-left:auto;font-size:11px;font-weight:600;background:rgba(255,255,255,.10);padding:2px 8px;border-radius:99px;color:#fff}
+.nav svg{color:var(--side-muted)} .nav.active svg{color:var(--mint)}
+.locs{display:flex;flex-direction:column;gap:2px;min-height:0}
+.loc{display:flex;align-items:center;gap:10px;width:100%;padding:7px 12px;border-radius:9px;font-size:12.5px;color:var(--side-ink);text-align:left}
+.loc:hover{background:rgba(255,255,255,.06)}
+.loc .dot{width:7px;height:7px;border-radius:50%;background:var(--side-muted);flex:none;opacity:.6}
+.loc .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.loc .n{font-size:11px;color:var(--side-muted);font-variant-numeric:tabular-nums}
+.loc.on{background:rgba(62,224,178,.14);color:#fff}
+.loc.on .dot{background:var(--mint);opacity:1}
+.loc.on .n{color:var(--mint)}
+.side-foot{margin-top:auto;padding:12px;border-radius:13px;background:var(--side-2);display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--side-muted)}
+.side-foot svg{color:var(--mint);margin-top:1px}
+.scrim{display:none}
+
+/* ---------- Main ---------- */
+.main{display:flex;flex-direction:column;gap:10px;padding:14px 20px 14px;min-width:0;height:100dvh;overflow-y:auto}
+.top{display:flex;align-items:center;gap:14px;flex:none}
+.hamb{display:none;width:40px;height:40px;border-radius:11px;background:var(--card);border:1px solid var(--line);place-items:center}
+.top h1{font-size:19px;font-weight:700;letter-spacing:-.2px;line-height:1.15}
+.top .sub{color:var(--muted);font-size:12px}
+.top .grow{flex:1;min-width:0}
+.search{position:relative;width:min(380px,40vw)}
+.search .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search input{width:100%;height:38px;border:1px solid var(--line);background:var(--card);border-radius:11px;padding:0 44px 0 40px;outline:none;transition:border-color .15s,box-shadow .15s}
+.search input::placeholder{color:var(--faint)}
+.search input:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(22,169,106,.12)}
+.search kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);font:600 11px var(--font);color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:2px 7px;background:#f7faf8}
+.search .clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:8px;display:none;place-items:center;color:var(--muted)}
+.search .clr:hover{background:var(--line-2)}
+.search.has .clr{display:grid} .search.has kbd{display:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:38px;padding:0 15px;border-radius:11px;font-weight:600;white-space:nowrap;transition:background .15s,transform .05s,border-color .15s}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--side);color:#fff}
+.btn.primary:hover{background:#16503f}
+.btn.ghost{background:var(--card);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:#cfd9d4;background:#fafcfb}
+.btn.danger{background:var(--red);color:#fff} .btn.danger:hover{background:#d13b40}
+.btn.sm{height:30px;padding:0 11px;border-radius:9px;font-size:12px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;flex:none}
+.main.focus .kpis{display:none}
+.kpi{padding:10px 14px 9px;display:flex;flex-direction:column;gap:6px}
+.kpi .row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.kpi .lb{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.kpi .val{display:flex;align-items:center;gap:10px;margin-top:4px}
+.kpi .val b{font-size:21px;font-weight:700;letter-spacing:-.4px;line-height:1;font-variant-numeric:tabular-nums}
+.pill{font-size:10.5px;font-weight:600;color:var(--green-ink);background:var(--green-soft);border:1px solid var(--green-line);border-radius:99px;padding:2px 9px;white-space:nowrap}
+.kpi .ib{width:32px;height:32px;border-radius:10px;background:var(--green-soft);color:var(--green-ink);display:grid;place-items:center;border:1px solid var(--green-line)}
+.kpi .ft{font-size:11px;color:var(--muted);border-top:1px solid var(--line-2);padding-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kpi .ft b{color:var(--ink);font-weight:600}
+
+/* Categorías */
+.cats{padding:9px 14px 4px;flex:none;min-width:0}
+.cats .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.cats .hd h2,.tbl h2{font-size:13px;font-weight:700}
+.cats .hd span{font-size:12px;color:var(--muted)}
+.strip{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin;scrollbar-color:#cdd8d3 transparent}
+.chip{display:flex;flex-direction:column;align-items:center;gap:4px;width:70px;flex:none;position:relative}
+.chip .circ{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--green-soft);color:var(--green-ink);border:1px solid var(--green-line);transition:all .18s}
+.chip:hover .circ{transform:translateY(-2px);border-color:var(--green)}
+.chip .nm{font-size:9.5px;font-weight:600;letter-spacing:.3px;color:var(--muted);max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .cnt{position:absolute;top:-3px;right:8px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#fff;border:1px solid var(--line);font-size:9.5px;font-weight:700;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.chip.on .circ{background:var(--side);color:var(--mint);border-color:var(--side);box-shadow:0 0 0 4px rgba(22,169,106,.16)}
+.chip.on .nm{color:var(--ink)}
+.chip.on .cnt{background:var(--mint);border-color:var(--mint);color:var(--side)}
+.chip.zero{opacity:.38}
+
+/* Tabla */
+.tbl{flex:1 0 auto;display:flex;flex-direction:column;min-height:0;min-width:0}
+.filters{display:grid;grid-template-columns:1fr 1.25fr 1.25fr 1.25fr;gap:10px;padding:10px 14px 9px;border-bottom:1px solid var(--line-2);flex:none}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field>label{font-size:10px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+.ctl{position:relative}
+.input,.sel{width:100%;height:34px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:0 34px 0 11px;outline:none;text-align:left;display:flex;align-items:center;transition:border-color .15s,box-shadow .15s}
+.input::placeholder{color:var(--faint)}
+.input:focus,.sel.open{border-color:var(--green);box-shadow:0 0 0 4px rgba(22,169,106,.12)}
+.input.bad{border-color:var(--red);box-shadow:0 0 0 4px rgba(229,72,77,.10)}
+.sel .v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sel .v.ph{color:var(--faint)}
+.sel .n{background:var(--green-soft);color:var(--green-ink);border:1px solid var(--green-line);font-size:11px;font-weight:700;border-radius:99px;padding:0 7px;margin-left:6px}
+.ctl>.ic.r{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;transition:transform .15s}
+.sel.open~.ic.r{transform:translateY(-50%) rotate(180deg)}
+.ctl .xbtn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:8px;display:none;place-items:center;color:var(--muted)}
+.ctl .xbtn:hover{background:var(--line-2)}
+.ctl.has .xbtn{display:grid}
+.ctl.has .ic.r{display:none}
+.err{font-size:12px;color:var(--red);min-height:0}
+
+.bar{display:flex;align-items:center;gap:8px;padding:6px 14px;border-bottom:1px solid var(--line-2);flex:none;min-height:42px;flex-wrap:wrap}
+.bar .cnt{font-weight:600}
+.bar .cnt span{color:var(--muted);font-weight:500}
+.tags{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
+.tag{display:inline-flex;align-items:center;gap:6px;background:var(--green-soft);border:1px solid var(--green-line);color:var(--green-ink);font-size:11px;font-weight:600;border-radius:99px;padding:3px 6px 3px 10px;max-width:220px}
+.tag span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag button{width:18px;height:18px;border-radius:50%;display:grid;place-items:center}
+.tag button:hover{background:rgba(11,122,75,.15)}
+.bar.bulk{background:var(--side);border-radius:0;color:#fff}
+.bar.bulk .cnt span{color:var(--side-muted)}
+.bar.bulk .btn.ghost{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#fff}
+.bar.bulk .btn.ghost:hover{background:rgba(255,255,255,.15)}
+.bar.bulk .btn.danger{background:#e5484d}
+.sp{flex:1}
+
+.twrap{flex:1 1 394px;min-height:394px;overflow:auto;border-radius:0 0 var(--r-lg) var(--r-lg);scrollbar-width:thin;scrollbar-color:#cdd8d3 transparent}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:940px}
+thead th{position:sticky;top:0;z-index:2;background:#f8faf9;font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 12px;height:34px;border-bottom:1px solid var(--line);white-space:nowrap;user-select:none}
+thead th.s{cursor:pointer}
+thead th.s:hover{color:var(--ink)}
+thead th .th{display:inline-flex;align-items:center;gap:5px}
+thead th .th .ic{opacity:.35} thead th.sorted .th .ic{opacity:1;color:var(--green-ink)}
+tbody td{padding:0 12px;height:36px;font-size:12px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+tbody tr{transition:background .12s;cursor:default}
+tbody tr:hover{background:#f6fbf8}
+tbody tr.sel{background:var(--green-soft)}
+tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--green)}
+td.c-chk,th.c-chk{width:44px;padding-right:0}
+td.c-code{font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.2px}
+td.mut{color:var(--muted)}
+td.c-motor,td.c-chasis{font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.catpill{display:inline-flex;align-items:center;gap:6px;background:var(--green-soft);border:1px solid var(--green-line);color:var(--green-ink);border-radius:99px;padding:1px 9px 1px 2px;font-size:11px;font-weight:600}
+.catpill i{width:18px;height:18px;border-radius:50%;background:#fff;display:grid;place-items:center;font-style:normal}
+.lcell{display:inline-flex;align-items:center;gap:6px}
+.lcell svg{color:var(--faint)}
+td.c-act{text-align:right;width:76px;padding-right:8px}
+th.c-act{width:76px}
+.iconbtn{width:28px;height:28px;border-radius:8px;display:inline-grid;place-items:center;color:var(--muted);transition:all .15s}
+.iconbtn:hover{background:#fff;color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.iconbtn.danger:hover{color:var(--red);background:var(--red-soft);box-shadow:none}
+mark{background:rgba(62,224,178,.35);color:inherit;border-radius:3px;padding:0 1px}
+.chk{width:16px;height:16px;border-radius:5px;border:1.5px solid #b9c7c1;background:#fff;display:grid;place-items:center;color:transparent;transition:all .12s}
+.chk:hover{border-color:var(--green)}
+.chk.on,.chk.mix{background:var(--green);border-color:var(--green);color:#fff}
+.chk.mix::before{content:"";width:9px;height:2px;border-radius:2px;background:#fff}
+.chk.mix svg{display:none}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%;min-height:220px;color:var(--muted);text-align:center;padding:24px}
+.empty .ib{width:54px;height:54px;border-radius:50%;background:var(--green-soft);color:var(--green-ink);display:grid;place-items:center}
+.empty b{color:var(--ink);font-size:15px}
+
+/* Popovers / modal / toast */
+.pop{position:fixed;z-index:300;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--pop);display:flex;flex-direction:column;overflow:hidden;animation:pin .14s ease-out}
+@keyframes pin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.pop .ps{padding:8px;border-bottom:1px solid var(--line-2);position:relative;flex:none}
+.pop .ps .ic{position:absolute;left:19px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.pop .ps input{width:100%;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px 0 34px;outline:none}
+.pop .ps input:focus{border-color:var(--green)}
+.pop .pl{overflow-y:auto;padding:6px;flex:1;scrollbar-width:thin}
+.opt{cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:9px;text-align:left;font-size:13px}
+.opt:hover,.opt.hl{background:#f2f7f4}
+.opt .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.opt .c{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.opt.dim .t{color:var(--faint)}
+.opt.new{color:var(--green-ink);font-weight:600}
+.pop .none{padding:14px;text-align:center;color:var(--muted);font-size:13px}
+.pop .pf{padding:8px 10px;border-top:1px solid var(--line-2);display:flex;justify-content:space-between;font-size:12px;color:var(--muted);flex:none}
+.pop .pf button{color:var(--green-ink);font-weight:600}
+
+.ov{position:fixed;inset:0;background:rgba(9,28,22,.5);z-index:200;display:grid;place-items:center;padding:16px;animation:fade .15s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:#fff;border-radius:20px;width:min(640px,100%);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;box-shadow:var(--pop);animation:rise .18s ease-out}
+.modal.sm{width:min(440px,100%)}
+@keyframes rise{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+.modal header{display:flex;align-items:flex-start;gap:12px;padding:20px 22px 14px}
+.modal header .ib{width:42px;height:42px;border-radius:12px;background:var(--green-soft);color:var(--green-ink);display:grid;place-items:center;flex:none}
+.modal header .ib.red{background:var(--red-soft);color:var(--red)}
+.modal header h3{font-size:17px;font-weight:700}
+.modal header p{color:var(--muted);font-size:13px}
+.modal header .iconbtn{margin-left:auto}
+.modal .body{padding:6px 22px 18px;overflow-y:auto}
+.modal footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--line-2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px 14px}
+.grid2 .full{grid-column:1/-1}
+.iconpick{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border:1px dashed var(--green-line);border-radius:12px;background:#fafdfb}
+.iconpick button{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--green-soft);color:var(--green-ink);border:1px solid var(--green-line)}
+.iconpick button.on{background:var(--side);color:var(--mint);border-color:var(--side)}
+.iconpick .cap{flex-basis:100%;font-size:12px;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin-top:2px}
+
+.toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:400;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:12px;background:var(--side);color:#fff;border-radius:13px;padding:11px 12px 11px 16px;box-shadow:var(--pop);font-weight:500;animation:rise .2s ease-out}
+.toast .ic{color:var(--mint)}
+.toast button{color:var(--mint);font-weight:700;padding:4px 8px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1180px){.filters{grid-template-columns:1fr 1fr}.search{width:min(300px,34vw)}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;z-index:250;left:0;top:0;bottom:0;width:284px;transform:translateX(-102%);transition:transform .22s ease;box-shadow:var(--pop)}
+  .side.open{transform:none}
+  .scrim.show{display:block;position:fixed;inset:0;background:rgba(9,28,22,.45);z-index:240}
+  .hamb{display:grid}
+  .main{padding:14px 14px 18px}
+  .top{flex-wrap:wrap}
+  .top .grow{flex:1 1 calc(100% - 120px)}
+  .search{order:5;width:100%;flex:1 1 100%}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}
+  .tbl{flex:1 0 auto}
+  .modal .grid2{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  .btn.primary .tx{display:none} .btn.primary{padding:0 13px;width:44px}
+  .filters{grid-template-columns:1fr}
+  .kpi .val b{font-size:22px}
+  .kpi .ib{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="Navegación">
+    <div class="brand">
+      <div class="logo" id="logo"></div>
+      <div><b>Inventario Maquinarias</b></div>
+    </div>
+    <div class="sec">Menú principal</div>
+    <button class="nav active" id="nav-inv"><span data-ic="layers"></span>Inventario<span class="badge" id="nav-total">0</span></button>
+    <button class="nav" id="nav-new"><span data-ic="plus"></span>Nueva unidad</button>
+    <button class="nav" id="nav-exp"><span data-ic="download"></span>Exportar CSV</button>
+    <button class="nav" id="nav-json"><span data-ic="database"></span>Exportar base (JSON)</button>
+    <button class="nav" id="nav-reset"><span data-ic="rotate-ccw"></span>Restablecer datos</button>
+    <div class="sec">Locaciones</div>
+    <div class="locs" id="locs"></div>
+    <div class="side-foot"><span data-ic="database"></span><span>Los cambios se guardan en este navegador. La base compartida se actualiza desde el repositorio.</span></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="main">
+    <header class="top">
+      <button class="hamb" id="hamb" aria-label="Abrir menú"></button>
+      <div class="grow">
+        <h1>Inventario de Maquinarias</h1>
+        <div class="sub">Estancia Rincón de Baguales · listado general 2025</div>
+      </div>
+      <div class="search" id="searchbox">
+        <span data-ic="search"></span>
+        <input id="q" type="text" placeholder="Buscar por código, marca, modelo, motor, chasis…" autocomplete="off" aria-label="Buscar">
+        <kbd>/</kbd>
+        <button class="clr" id="qclr" aria-label="Borrar búsqueda"></button>
+      </div>
+      <button class="btn primary" id="btn-new"><span data-ic="plus"></span><span class="tx">Nueva unidad</span></button>
+    </header>
+
+    <section class="kpis" id="kpis"></section>
+
+    <section class="card cats">
+      <div class="hd"><h2>Categorías</h2><span id="cats-hint"></span></div>
+      <div class="strip" id="strip"></div>
+    </section>
+
+    <section class="card tbl">
+      <div class="filters">
+        <div class="field"><label for="f-code">Código (ID)</label>
+          <div class="ctl" id="ctl-code"><input class="input" id="f-code" placeholder="Ej: RBTR0" autocomplete="off"><button class="xbtn" id="x-code" aria-label="Borrar"></button></div></div>
+        <div class="field"><label>Categoría</label><div class="ctl"><button class="sel" id="s-cat"></button><span data-ic="chevron-down" class="r"></span></div></div>
+        <div class="field"><label>Marca</label><div class="ctl"><button class="sel" id="s-brand"></button><span data-ic="chevron-down" class="r"></span></div></div>
+        <div class="field"><label>Ubicación</label><div class="ctl"><button class="sel" id="s-loc"></button><span data-ic="chevron-down" class="r"></span></div></div>
+      </div>
+      <div class="bar" id="bar"></div>
+      <div class="twrap" id="twrap">
+        <table>
+          <thead><tr id="thead"></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div id="empty" hidden></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* Íconos: Lucide (ISC) incrustados */
+const ICONS={"tractor": "<path d=\"m10 11 11 .9a1 1 0 0 1 .8 1.1l-.665 4.158a1 1 0 0 1-.988.842H20\" /> <path d=\"M16 18h-5\" /> <path d=\"M18 5a1 1 0 0 0-1 1v5.573\" /> <path d=\"M3 4h8.129a1 1 0 0 1 .99.863L13 11.246\" /> <path d=\"M4 11V4\" /> <path d=\"M7 15h.01\" /> <path d=\"M8 10.1V4\" /> <circle cx=\"18\" cy=\"18\" r=\"2\" /> <circle cx=\"7\" cy=\"15\" r=\"5\" />", "truck": "<path d=\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\" /> <path d=\"M15 18H9\" /> <path d=\"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14\" /> <circle cx=\"17\" cy=\"18\" r=\"2\" /> <circle cx=\"7\" cy=\"18\" r=\"2\" />", "car-front": "<path d=\"m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8\" /> <path d=\"M7 14h.01\" /> <path d=\"M17 14h.01\" /> <rect width=\"18\" height=\"8\" x=\"3\" y=\"10\" rx=\"2\" /> <path d=\"M5 18v2\" /> <path d=\"M19 18v2\" />", "bike": "<circle cx=\"18.5\" cy=\"17.5\" r=\"3.5\" /> <circle cx=\"5.5\" cy=\"17.5\" r=\"3.5\" /> <circle cx=\"15\" cy=\"5\" r=\"1\" /> <path d=\"M12 17.5V14l-3-3 4-3 2 3h2\" />", "zap": "<path d=\"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z\" />", "forklift": "<path d=\"M12 12H5a2 2 0 0 0-2 2v5\" /> <circle cx=\"13\" cy=\"19\" r=\"2\" /> <circle cx=\"5\" cy=\"19\" r=\"2\" /> <path d=\"M8 19h3m5-17v17h6M6 12V7c0-1.1.9-2 2-2h3l5 5\" />", "wrench": "<path d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z\" />", "spray-can": "<path d=\"M3 3h.01\" /> <path d=\"M7 5h.01\" /> <path d=\"M11 7h.01\" /> <path d=\"M3 7h.01\" /> <path d=\"M7 9h.01\" /> <path d=\"M3 11h.01\" /> <rect width=\"4\" height=\"4\" x=\"15\" y=\"5\" /> <path d=\"m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2\" /> <path d=\"m13 14 8-2\" /> <path d=\"m13 19 8-2\" />", "sprout": "<path d=\"M7 20h10\" /> <path d=\"M10 20c5.5-2.5.8-6.4 3-10\" /> <path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z\" /> <path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z\" />", "package": "<path d=\"M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z\" /> <path d=\"M12 22V12\" /> <path d=\"m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7\" /> <path d=\"m7.5 4.27 9 5.15\" />", "container": "<path d=\"M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z\" /> <path d=\"M10 21.9V14L2.1 9.1\" /> <path d=\"m10 14 11.9-6.9\" /> <path d=\"M14 19.8v-8.1\" /> <path d=\"M18 17.5V9.4\" />", "scissors": "<circle cx=\"6\" cy=\"6\" r=\"3\" /> <path d=\"M8.12 8.12 12 12\" /> <path d=\"M20 4 8.12 15.88\" /> <circle cx=\"6\" cy=\"18\" r=\"3\" /> <path d=\"M14.8 14.8 20 20\" />", "cog": "<path d=\"M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z\" /> <path d=\"M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z\" /> <path d=\"M12 2v2\" /> <path d=\"M12 22v-2\" /> <path d=\"m17 20.66-1-1.73\" /> <path d=\"M11 10.27 7 3.34\" /> <path d=\"m20.66 17-1.73-1\" /> <path d=\"m3.34 7 1.73 1\" /> <path d=\"M14 12h8\" /> <path d=\"M2 12h2\" /> <path d=\"m20.66 7-1.73 1\" /> <path d=\"m3.34 17 1.73-1\" /> <path d=\"m17 3.34-1 1.73\" /> <path d=\"m11 13.73-4 6.93\" />", "leaf": "<path d=\"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z\" /> <path d=\"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12\" />", "syringe": "<path d=\"m18 2 4 4\" /> <path d=\"m17 7 3-3\" /> <path d=\"M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5\" /> <path d=\"m9 11 4 4\" /> <path d=\"m5 19-3 3\" /> <path d=\"m14 4 6 6\" />", "caravan": "<path d=\"M18 19V9a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v8a2 2 0 0 0 2 2h2\" /> <path d=\"M2 9h3a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2\" /> <path d=\"M22 17v1a1 1 0 0 1-1 1H10v-9a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9\" /> <circle cx=\"8\" cy=\"19\" r=\"2\" />", "construction": "<rect x=\"2\" y=\"6\" width=\"20\" height=\"8\" rx=\"1\" /> <path d=\"M17 14v7\" /> <path d=\"M7 14v7\" /> <path d=\"M17 3v3\" /> <path d=\"M7 3v3\" /> <path d=\"M10 14 2.3 6.3\" /> <path d=\"m14 6 7.7 7.7\" /> <path d=\"m8 6 8 8\" />", "wheat": "<path d=\"M2 22 16 8\" /> <path d=\"M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /> <path d=\"M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /> <path d=\"M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z\" /> <path d=\"M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z\" /> <path d=\"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /> <path d=\"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" /> <path d=\"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z\" />", "cylinder": "<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\" /> <path d=\"M3 5v14a9 3 0 0 0 18 0V5\" />", "arrow-up-from-line": "<path d=\"m18 9-6-6-6 6\" /> <path d=\"M12 3v14\" /> <path d=\"M5 21h14\" />", "arrow-right-left": "<path d=\"m16 3 4 4-4 4\" /> <path d=\"M20 7H4\" /> <path d=\"m8 21-4-4 4-4\" /> <path d=\"M4 17h16\" />", "blend": "<circle cx=\"9\" cy=\"9\" r=\"7\" /> <circle cx=\"15\" cy=\"15\" r=\"7\" />", "box": "<path d=\"M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z\" /> <path d=\"m3.3 7 8.7 5 8.7-5\" /> <path d=\"M12 22V12\" />", "search": "<circle cx=\"11\" cy=\"11\" r=\"8\" /> <path d=\"m21 21-4.3-4.3\" />", "plus": "<path d=\"M5 12h14\" /> <path d=\"M12 5v14\" />", "pencil": "<path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\" /> <path d=\"m15 5 4 4\" />", "trash-2": "<path d=\"M3 6h18\" /> <path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\" /> <path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\" /> <line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\" /> <line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\" />", "x": "<path d=\"M18 6 6 18\" /> <path d=\"m6 6 12 12\" />", "check": "<path d=\"M20 6 9 17l-5-5\" />", "chevron-down": "<path d=\"m6 9 6 6 6-6\" />", "download": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\" /> <polyline points=\"7 10 12 15 17 10\" /> <line x1=\"12\" x2=\"12\" y1=\"15\" y2=\"3\" />", "map-pin": "<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /> <circle cx=\"12\" cy=\"10\" r=\"3\" />", "layers": "<path d=\"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z\" /> <path d=\"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12\" /> <path d=\"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17\" />", "tags": "<path d=\"m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19\" /> <path d=\"M9.586 5.586A2 2 0 0 0 8.172 5H3a1 1 0 0 0-1 1v5.172a2 2 0 0 0 .586 1.414L8.29 18.29a2.426 2.426 0 0 0 3.42 0l3.58-3.58a2.426 2.426 0 0 0 0-3.42z\" /> <circle cx=\"6.5\" cy=\"9.5\" r=\".5\" fill=\"currentColor\" />", "badge-check": "<path d=\"M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z\" /> <path d=\"m9 12 2 2 4-4\" />", "menu": "<line x1=\"4\" x2=\"20\" y1=\"12\" y2=\"12\" /> <line x1=\"4\" x2=\"20\" y1=\"6\" y2=\"6\" /> <line x1=\"4\" x2=\"20\" y1=\"18\" y2=\"18\" />", "rotate-ccw": "<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /> <path d=\"M3 3v5h5\" />", "database": "<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\" /> <path d=\"M3 5V19A9 3 0 0 0 21 19V5\" /> <path d=\"M3 12A9 3 0 0 0 21 12\" />", "arrow-up": "<path d=\"m5 12 7-7 7 7\" /> <path d=\"M12 19V5\" />", "arrow-down": "<path d=\"M12 5v14\" /> <path d=\"m19 12-7 7-7-7\" />", "arrow-up-down": "<path d=\"m21 16-4 4-4-4\" /> <path d=\"M17 20V4\" /> <path d=\"m3 8 4-4 4 4\" /> <path d=\"M7 4v16\" />", "inbox": "<polyline points=\"22 12 16 12 14 15 10 15 8 12 2 12\" /> <path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\" />", "fan": "<path d=\"M10.827 16.379a6.082 6.082 0 0 1-8.618-7.002l5.412 1.45a6.082 6.082 0 0 1 7.002-8.618l-1.45 5.412a6.082 6.082 0 0 1 8.618 7.002l-5.412-1.45a6.082 6.082 0 0 1-7.002 8.618l1.45-5.412Z\" /> <path d=\"M12 12v.01\" />"};
+/* Copia de respaldo de la base (se usa si no se puede leer data/maquinarias.json, por ejemplo al abrir el archivo directo) */
+const BASE_DB={"version":1,"updated":"2026-11-04","locations":["EST. RINCON DE BAGUALES","EST. LOS GATOS","EST. ABRA GRANDE","EST. DOÑA LUISA","EST. EL JURAMENTO"],"units":[{"id":"M001","code":"RBTR001","cat":"GF","brand":"VALTRA","model":"BH180 4X4","motor":"S/N","chasis":"S/N","year":"2001","loc":"EST. EL JURAMENTO"},{"id":"M002","code":"RBTR012","cat":"TRACTOR","brand":"VALTRA","model":"BM100 4X2","motor":"420DST84950","chasis":"BM102738712","year":"2007","loc":"EST. EL JURAMENTO"},{"id":"M003","code":"RBTR013","cat":"TRACTOR","brand":"VALTRA","model":"BM100 4X2","motor":"420DST88314","chasis":"RPA503836","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M004","code":"RBTR014","cat":"TRACTOR","brand":"VALTRA","model":"BL88 4X2","motor":"420DSEU81716","chasis":"BL88214295","year":"2008","loc":"EST. ABRA GRANDE"},{"id":"M005","code":"RBTR018","cat":"TRACTOR","brand":"VALTRA","model":"1280 S","motor":"D229-6-128430","chasis":"S/N","year":"2006","loc":"EST. RINCON DE BAGUALES"},{"id":"M006","code":"RBTR019","cat":"TRACTOR","brand":"VALTRA","model":"BH160 4X4","motor":"M81153","chasis":"BH164277567","year":"2006","loc":"EST. DOÑA LUISA"},{"id":"M007","code":"RBTR022","cat":"TRACTOR","brand":"JOHN DEERE","model":"5082E C/PALA","motor":"J04045G725657","chasis":"1J05082EJM0010959","year":"2021","loc":"EST. RINCON DE BAGUALES"},{"id":"M008","code":"RBTR023","cat":"TRACTOR","brand":"VALTRA","model":"BH180","motor":"620DST84359","chasis":"BH184738383","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M009","code":"RBTR024","cat":"TRACTOR","brand":"JOHN DEERE","model":"5082E","motor":"J04045G711000","chasis":"1J05082ECM0011000","year":"2021","loc":"EST. ABRA GRANDE"},{"id":"M010","code":"RBTR025","cat":"TRACTOR","brand":"JOHN DEERE","model":"5082E","motor":"J04045G725659","chasis":"1J05082ECM0010963","year":"2022","loc":"EST. ABRA GRANDE"},{"id":"M011","code":"RBTR026","cat":"TRACTOR","brand":"JOHN DEERE","model":"5090E","motor":"J04045B729630","chasis":"1J05090EHN0013699","year":"2021","loc":"EST. RINCON DE BAGUALES"},{"id":"M012","code":"RBTR027","cat":"TRACTOR","brand":"JOHN DEERE","model":"5090E","motor":"J04045B729631","chasis":"1J05090EHN0013698","year":"2022","loc":"EST. DOÑA LUISA"},{"id":"M013","code":"RBJD028","cat":"TRACTOR","brand":"JOHN DEERE","model":"5090E","motor":"J04045B729609","chasis":"1J05090EHN0013695","year":"2022","loc":"EST. DOÑA LUISA"},{"id":"M014","code":"RBPL018","cat":"TRACTOR","brand":"FIAT","model":"C/ PALA PALVER","motor":"14986","chasis":"6011/2","year":"","loc":"EST. DOÑA LUISA"},{"id":"M015","code":"SCTR003","cat":"TRACTOR","brand":"VALTRA","model":"BM 100","motor":"S/N","chasis":"N1297","year":"","loc":"EST. DOÑA LUISA"},{"id":"M016","code":"DLTR001","cat":"TRACTOR","brand":"MANCINI","model":"ARTICULADO 8220","motor":"2042575","chasis":"TACH0084","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M017","code":"ONTR012","cat":"TRACTOR","brand":"VALTRA","model":"VALMET 1180 - 115 HP","motor":"S/N","chasis":"1190/11-393","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M018","code":"RBMG001","cat":"GENERADOR","brand":"BOUNUS","model":"60KVA","motor":"S/N","chasis":"NO POSEE","year":"2014","loc":"EST. RINCON DE BAGUALES"},{"id":"M019","code":"RBMG002","cat":"GENERADOR","brand":"BOUNUS","model":"CRAMACO G2R 200 SD/4","motor":"Z1S001157","chasis":"NO POSEE","year":"2016","loc":"EST. RINCON DE BAGUALES"},{"id":"M020","code":"RBMG003","cat":"GENERADOR","brand":"PERKIN","model":"WEG GTA201AIHS BE","motor":"1046991310","chasis":"NO POSEE","year":"2016","loc":"EST. RINCON DE BAGUALES"},{"id":"M021","code":"RBMG004","cat":"GENERADOR","brand":"BOUNUS","model":"","motor":"36586490","chasis":"NO POSEE","year":"2016","loc":"EST. RINCON DE BAGUALES"},{"id":"M022","code":"RBMG005","cat":"GENERADOR","brand":"CUMMINS","model":"C220D5","motor":"F18T044204","chasis":"NO POSEE","year":"2019","loc":"EST. RINCON DE BAGUALES"},{"id":"M023","code":"RBMG006","cat":"GENERADOR","brand":"SULLAIR","model":"CHICO","motor":"S/N","chasis":"NO POSEE","year":"2019","loc":"EST. RINCON DE BAGUALES"},{"id":"M024","code":"RBMG007","cat":"GENERADOR","brand":"BOUNUS","model":"44KVA","motor":"S/N","chasis":"NO POSEE","year":"2023","loc":"EST. RINCON DE BAGUALES"},{"id":"M025","code":"DLGEN02","cat":"GENERADOR","brand":"CUMMINS","model":"40 KVA SULLAIR","motor":"JUY833591","chasis":"GD04C-1612756","year":"2016","loc":"EST. DOÑA LUISA"},{"id":"M026","code":"RBFAV001","cat":"PULVERIZADORA","brand":"FAVOT","model":"FAC3028","motor":"36520667","chasis":"8B90273HA15FSA268","year":"2015","loc":"EST. RINCON DE BAGUALES"},{"id":"M027","code":"RBFAV002","cat":"PULVERIZADORA","brand":"FAVOT","model":"MAC3028","motor":"36527061","chasis":"8B90273HA15FSA277","year":"2016","loc":"EST. RINCON DE BAGUALES"},{"id":"M028","code":"RBJD01","cat":"PULVERIZADORA","brand":"JOHN DEERE","model":"4730 FC1","motor":"J06068G726786","chasis":"1NW4730XTJ0056251","year":"2019","loc":"EST. LOS GATOS"},{"id":"M029","code":"RBJD02","cat":"PULVERIZADORA","brand":"JOHN DEERE","model":"4730 FC1","motor":"J06068G726852","chasis":"1NW4730XPJ0056252","year":"2019","loc":"EST. LOS GATOS"},{"id":"M030","code":"RBJD03","cat":"PULVERIZADORA","brand":"JOHN DEERE","model":"4040M","motor":"J06068G737941","chasis":"1NW4040MESF250130","year":"2025","loc":"EST. LOS GATOS"},{"id":"M031","code":"RBJD04","cat":"PULVERIZADORA","brand":"JOHN DEERE","model":"4040M","motor":"J06068G738023","chasis":"1NW4040MVSF250154","year":"2025","loc":"EST. LOS GATOS"},{"id":"M032","code":"RBPLA015","cat":"PULVERIZADORA","brand":"PLA","model":"MAP II3250 BT","motor":"H724964","chasis":"5157","year":"","loc":""},{"id":"M033","code":"RBPLA016","cat":"PULVERIZADORA","brand":"PLA","model":"MAP II3250 BT","motor":"H725381","chasis":"5280","year":"","loc":""},{"id":"M034","code":"RBPLA017","cat":"PULVERIZADORA","brand":"PLA","model":"MAP II3500 BT","motor":"H727881","chasis":"6125","year":"","loc":""},{"id":"M035","code":"RBPLA018","cat":"PULVERIZADORA","brand":"PLA","model":"MAP II3500 BT","motor":"H727829","chasis":"6103","year":"","loc":""},{"id":"M036","code":"RBPLA019","cat":"PULVERIZADORA","brand":"PLA","model":"MAP III3600 BT","motor":"HC730326","chasis":"7021","year":"","loc":""},{"id":"M037","code":"RBST01","cat":"PULVERIZADORA","brand":"STARA","model":"IMPERADOR 4000","motor":"36711178","chasis":"IMP-CB11437","year":"2017","loc":"EST. LOS GATOS"},{"id":"M038","code":"RBST02","cat":"PULVERIZADORA","brand":"STARA","model":"IMPERADOR 4000","motor":"36711177","chasis":"IMP-CB11441","year":"2017","loc":"EST. LOS GATOS"},{"id":"M039","code":"JMST01","cat":"PULVERIZADORA","brand":"STARA","model":"IMPERADOR 4000","motor":"36711178","chasis":"IMP-CB11445","year":"2013","loc":"EST. DOÑA LUISA"},{"id":"M040","code":"RBFERT02","cat":"FERTILIZADORA","brand":"STARA","model":"HERCULES 6.0","motor":"F1A080489","chasis":"HEM-BI10674","year":"","loc":"EST. LOS GATOS"},{"id":"M041","code":"RBFERT03","cat":"FERTILIZADORA","brand":"STARA","model":"HERCULES 6.0","motor":"F1A085231","chasis":"HEM-CC116040","year":"","loc":"EST. LOS GATOS"},{"id":"M042","code":"RBMO001","cat":"MOTO","brand":"HONDA","model":"NX 150 AZUL","motor":"JC30E83501335","chasis":"9C2JD20103R501335","year":"2003","loc":"EST. LOS GATOS"},{"id":"M043","code":"RBMO002","cat":"MOTO","brand":"HONDA","model":"NXR 125 BLANCA","motor":"JC30E87501070","chasis":"9C2JD20107R501070","year":"2007","loc":"EST. LOS GATOS"},{"id":"M044","code":"RBMO003","cat":"MOTO","brand":"HONDA","model":"XR 125 L ROJA","motor":"CC30E-6779029","chasis":"8CHJD19A6DL002217","year":"2012","loc":"EST. RINCON DE BAGUALES"},{"id":"M045","code":"RBMO004","cat":"MOTO","brand":"HONDA","model":"XR 150 L ARIEL","motor":"KD07E-2162363","chasis":"8CHKD0900GL008034","year":"2015","loc":"EST. LOS GATOS"},{"id":"M046","code":"JMMOTO","cat":"MOTO","brand":"HONDA","model":"XR 150 L","motor":"KD07E-2467512","chasis":"8CHKD0920MP000485","year":"2020","loc":"EST. EL JURAMENTO"},{"id":"M047","code":"VARIOS","cat":"MOTO","brand":"HONDA","model":"XR 150 L","motor":"KD07E-2347905","chasis":"8CHKD0900JP007302","year":"2018","loc":"EST. DOÑA LUISA"},{"id":"M048","code":"RBMONT001","cat":"MONTACARGAS","brand":"TOYOTA","model":"FDZN25","motor":"1DZ0285585","chasis":"FDZN25-22690","year":"","loc":"EST. EL JURAMENTO"},{"id":"M049","code":"RBMONT002","cat":"MONTACARGAS","brand":"TOYOTA","model":"FDZN25","motor":"1DZ0350855","chasis":"FDZN25-25669","year":"","loc":"EST. EL JURAMENTO"},{"id":"M050","code":"RBMONT03","cat":"MONTACARGAS","brand":"TOYOTA","model":"FDZN25","motor":"1DZ0372669","chasis":"FDZN25-26909","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M051","code":"RBMONT04","cat":"MONTACARGAS","brand":"TOYOTA","model":"FDZN25","motor":"1DZ0372985","chasis":"FDZN25-26913","year":"","loc":"EST. LOS GATOS"},{"id":"M052","code":"RBMONT05","cat":"MONTACARGAS","brand":"TOYOTA","model":"FDZN25","motor":"S/N","chasis":"FDZN25-26863","year":"","loc":"EST. LOS GATOS"},{"id":"M053","code":"RBMONT06","cat":"MONTACARGAS","brand":"TOYOTA","model":"FDZN25","motor":"1DZ0381193","chasis":"FDZN25-27571","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M054","code":"RB3016473","cat":"MIXER","brand":"MONTECOR","model":"10 M3","motor":"S/N","chasis":"S/N","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M055","code":"RB3016474","cat":"MIXER","brand":"MONTECOR","model":"10 M3","motor":"S/N","chasis":"S/N","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M056","code":"RBMOTON01","cat":"MOTONIVELADORA","brand":"KOMATSU","model":"GF655-5","motor":"SAA6D107E-1","chasis":"KMTGD026TGBB40146","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M057","code":"RBCOR01","cat":"CORTADORA","brand":"JOHN DEERE","model":"Z540R","motor":"FS730VC32137","chasis":"1GX540MFPJJ081791","year":"2019","loc":"EST. LOS GATOS"},{"id":"M058","code":"JMPAS001","cat":"CORTADORA","brand":"JOHN DEERE","model":"Z540M","motor":"54A30818","chasis":"1GX540MFCJJ081794","year":"","loc":"EST. DOÑA LUISA"},{"id":"M059","code":"VARIOS","cat":"CORTADORA","brand":"JOHN DEERE","model":"Z540R","motor":"S/N","chasis":"S/N","year":"","loc":"EST. ABRA GRANDE"},{"id":"M060","code":"RBWEED01","cat":"EQUIPO","brand":"FAVOT","model":"WEED-IT 301","motor":"S/N","chasis":"S/N","year":"2015","loc":"EST. RINCON DE BAGUALES"},{"id":"M061","code":"RBWEED02","cat":"EQUIPO","brand":"FAVOT","model":"WEED-IT 659","motor":"S/N","chasis":"S/N","year":"2016","loc":"EST. RINCON DE BAGUALES"},{"id":"M062","code":"VARIOS","cat":"DESCOMPACTADOR","brand":"GIORGI","model":"DIS-50000","motor":"S/N","chasis":"009-1-13","year":"2013","loc":"EST. DOÑA LUISA"},{"id":"M063","code":"VARIOS","cat":"CISTERNA","brand":"BOSQUE","model":"ATR-8M","motor":"S/N","chasis":"753","year":"2021","loc":"EST. DOÑA LUISA"},{"id":"M064","code":"DLEXT01","cat":"EXTRACTORA","brand":"AKRON","model":"EXG 300","motor":"S/N","chasis":"80G.293.0321","year":"2021","loc":"EST. DOÑA LUISA"},{"id":"M065","code":"RBEXT04","cat":"EXTRACTORA","brand":"AKRON","model":"EXG 300","motor":"S/N","chasis":"802.210.010G","year":"2010","loc":"EST. DOÑA LUISA"},{"id":"M066","code":"RBEXT05","cat":"EXTRACTORA","brand":"AKRON","model":"EXG 300","motor":"S/N","chasis":"80G.212.048","year":"2018","loc":"EST. LOS GATOS"},{"id":"M067","code":"DLEXTRAC01","cat":"EXTRACTORA","brand":"AKRON","model":"EXG 300","motor":"S/N","chasis":"80G-273-0321","year":"2021","loc":"EST. DOÑA LUISA"},{"id":"M068","code":"JMEXT01","cat":"EXTRACTORA","brand":"AKRON","model":"EXG 300","motor":"S/N","chasis":"80G-283-0321","year":"2021","loc":""},{"id":"M069","code":"RBEXT02","cat":"EXTRACTORA","brand":"AKRON","model":"EXG 300","motor":"S/N","chasis":"802.130.41G","year":"2011","loc":"EST. EL JURAMENTO"},{"id":"M070","code":"VARIOS","cat":"EXTRACTORA","brand":"AKRON","model":"EX 3600","motor":"S/N","chasis":"EX 362.220.46","year":"2016","loc":"EST. EL JURAMENTO"},{"id":"M071","code":"RBEXT02","cat":"EXTRACTORA","brand":"AKRON","model":"EXG 300","motor":"S/N","chasis":"802.310.10G","year":"2010","loc":"EST. LOS GATOS"},{"id":"M072","code":"RBCHI04","cat":"CHIMANGO","brand":"BAIMA","model":"BAIMA","motor":"S/N","chasis":"10816","year":"","loc":"EST. DOÑA LUISA"},{"id":"M073","code":"VARIOS","cat":"RASTRA","brand":"GROSSPAL","model":"RTE 20000","motor":"S/N","chasis":"KIB-2208","year":"","loc":"EST. DOÑA LUISA"},{"id":"M074","code":"VARIOS","cat":"RASTRA","brand":"MICELLI","model":"RASTRA 64 DISCOS","motor":"S/N","chasis":"M97-078","year":"","loc":"EST. DOÑA LUISA"},{"id":"M075","code":"RB2210547","cat":"EMBOLSADORA","brand":"AKRON","model":"EMBOLSADORA E-9250","motor":"S/N","chasis":"9324121","year":"","loc":"EST. DOÑA LUISA"},{"id":"M076","code":"VARIOS","cat":"EMBOLSADORA","brand":"MS & MARTINEZ","model":"SILOGRAIN E0-9P","motor":"S/N","chasis":"E0-0305-008","year":"","loc":"EST. DOÑA LUISA"},{"id":"M077","code":"VARIOS","cat":"EMBOLSADORA","brand":"MS & MARTINEZ","model":"SILOGRAIN E0-9P","motor":"S/N","chasis":"E0-0389-010","year":"","loc":"EST. DOÑA LUISA"},{"id":"M078","code":"JMDES02","cat":"DESMALEZADORA","brand":"GROSSPAL","model":"AVG 200","motor":"S/N","chasis":"S/N","year":"","loc":"EST. DOÑA LUISA"},{"id":"M079","code":"DLDESM02","cat":"DESMALEZADORA","brand":"GRASSCUTTER","model":"TT 3000 AR","motor":"S/N","chasis":"TT-3000","year":"","loc":"EST. DOÑA LUISA"},{"id":"M080","code":"VARIOS","cat":"PALA FRONTAL","brand":"OMAR MARTIN","model":"800 F","motor":"S/N","chasis":"NS-6804","year":"2019","loc":"EST. DOÑA LUISA"},{"id":"M081","code":"VARIOS","cat":"PALA ARRASTRE","brand":"CAÑOMAT","model":"PALA DE ARRASTRE M-13","motor":"S/N","chasis":"13-2518","year":"","loc":"EST. DOÑA LUISA"},{"id":"M082","code":"VARIOS","cat":"NIVELADORA","brand":"GROSSPAL","model":"PALA NIVELADORA 4M","motor":"S/N","chasis":"S/N","year":"","loc":"EST. DOÑA LUISA"},{"id":"M083","code":"AE926WD","cat":"CAMION","brand":"IVECO","model":"TECTOR 170","motor":"F4AE3681E*8080471","chasis":"8ATA1RMH0NX114032","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M084","code":"AD819GS","cat":"CAMION","brand":"VOLKSWAGEN","model":"CAM. 17.280/43 LR","motor":"2094996A464990","chasis":"953658273KR901099","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M085","code":"AC543VC","cat":"CAMION","brand":"VOLKSWAGEN","model":"CONSTELLATION 17280","motor":"2094884A624879","chasis":"953658273JR814978","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M086","code":"AC543VB","cat":"CAMION","brand":"VOLKSWAGEN","model":"CONSTELLATION 17280","motor":"2094878A544872","chasis":"953658247JR814522","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M087","code":"AH811BT","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 AT (KHON D.)","motor":"2GD-J112847","chasis":"8AJDB3CD0T1386329","year":"2025","loc":"EST. LOS GATOS"},{"id":"M088","code":"AH811BS","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 AT (HAUCH W.)","motor":"2GD-J110204","chasis":"8AJDB3CD4T1385717","year":"2025","loc":"EST. LOS GATOS"},{"id":"M089","code":"AH010KQ","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 DX 2.4 (SEBA R.)","motor":"2GD-D420654","chasis":"8AJDB3CDXS1367723","year":"2025","loc":"EST. RINCON DE BAGUALES"},{"id":"M090","code":"AH010KN","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 DX 2.4 (QUADRIO A.)","motor":"2GD-G541041","chasis":"8AJDB3CD9S1368040","year":"2025","loc":"EST. RINCON DE BAGUALES"},{"id":"M091","code":"PCQ195","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 DC 2.5","motor":"2KD-A839802","chasis":"8AJFR22G2F4582060","year":"2015","loc":"EST. EL JURAMENTO"},{"id":"M092","code":"AB523CX","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 TD 2.5 (CHOCADA","motor":"2GD-4260032","chasis":"8AJDB8CD8H1394392","year":"2017","loc":""},{"id":"M093","code":"AD145VV","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 TDI 2.5 (OLMEDO)","motor":"2GD-C392401","chasis":"8AJDB8CD5J1400820","year":"2018","loc":"EST. EL JURAMENTO"},{"id":"M094","code":"AD219VB","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 DX 2.4 (FERNANDEZ D.)","motor":"2GD-C404719","chasis":"8AJDB8CD5K1401094","year":"2018","loc":"EST. RINCON DE BAGUALES"},{"id":"M095","code":"AE734FV","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 DX 2.4 TDI (CORONEL C.)","motor":"2GD-0921609","chasis":"8AJDB3CD1M1306957","year":"2021","loc":"EST. RINCON DE BAGUALES"},{"id":"M096","code":"AE734FX","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 DX 2.4 TDI (VALDEZ D.)","motor":"2GD-0920840","chasis":"8AJDB3CD0M1306836","year":"2021","loc":"EST. RINCON DE BAGUALES"},{"id":"M097","code":"AF347TX","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 DX 2.4 TDI (BRAVO A.)","motor":"2GD-G301502","chasis":"8AJDB3CDXN1321216","year":"2022","loc":"EST. RINCON DE BAGUALES"},{"id":"M098","code":"AD145VW","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 DX 2.5 TDI (DENIS)","motor":"2GD-C393453","chasis":"8AJDB8CD0J1400806","year":"2018","loc":"EST. RINCON DE BAGUALES"},{"id":"M099","code":"AG327KT","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX 4X4 DX 2.4 TDI (RAMIREZ G)","motor":"2GD-D322650","chasis":"8AJDB3CDXR1353329","year":"2023","loc":"EST. RINCON DE BAGUALES"},{"id":"M100","code":"AB523CV","cat":"CAMIONETA","brand":"TOYOTA","model":"HILUX4X4 DC 2.4 (CAB.SIMPLE)","motor":"2GD-4267680","chasis":"8AJFB8CB7H1551627","year":"2017","loc":""},{"id":"M101","code":"VARIOS","cat":"DESCOMPACTADOR","brand":"GIORGI","model":"DIS-50000","motor":"S/N","chasis":"008-1-13","year":"2021","loc":"EST. RINCON DE BAGUALES"},{"id":"M102","code":"VARIOS","cat":"RETROEXCAVADORA","brand":"OMAR MARTIN","model":"OM 950 R","motor":"S/N","chasis":"SN-4959","year":"2015","loc":"EST. RINCON DE BAGUALES"},{"id":"M103","code":"RBINO02","cat":"INOCULADORA","brand":"METECHEGARAY","model":"MTS-12 TN","motor":"S/N","chasis":"SN-2229","year":"2013","loc":"EST. RINCON DE BAGUALES"},{"id":"M104","code":"RBINO01","cat":"INOCULADORA","brand":"METECHEGARAY","model":"MTS-12 TN","motor":"S/N","chasis":"SN-2092","year":"2006","loc":"EST. RINCON DE BAGUALES"},{"id":"M105","code":"NUMERO 7","cat":"EMBOLSADORA","brand":"MS & MARTINEZ","model":"SILOGRAIN E0-9P","motor":"S/N","chasis":"SN-E0-403-006","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M106","code":"NUMERO 6","cat":"EMBOLSADORA","brand":"MS & MARTINEZ","model":"SILOGRAIN E0-9P","motor":"S/N","chasis":"SN-E0-403-005","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M107","code":"NUMERO 8","cat":"EMBOLSADORA","brand":"MS & MARTINEZ","model":"SILOGRAIN E0-9P","motor":"S/N","chasis":"SN-E0-403-007","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M108","code":"RBEMBO07","cat":"EMBOLSADORA","brand":"AKRON","model":"E9700H","motor":"S/N","chasis":"SN-09-302-048","year":"2018","loc":"EST. RINCON DE BAGUALES"},{"id":"M109","code":"VARIOS","cat":"TOLVA","brand":"AKRON","model":"GMAX2923","motor":"S/N","chasis":"M2923-112-0621","year":"2021","loc":"EST. RINCON DE BAGUALES"},{"id":"M110","code":"RVTOLVA01","cat":"MONOTOLVA","brand":"AKRON","model":"GRANMAX 2923","motor":"S/N","chasis":"M29231220621","year":"2021","loc":"EST. RINCON DE BAGUALES"},{"id":"M111","code":"VARIOS","cat":"SEMBRADORA","brand":"AGROMETAL","model":"MX 2321","motor":"S/N","chasis":"SN-0701033770","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M112","code":"RBCIN01","cat":"CINTA","brand":"RULY","model":"TRANSPORTADORA 236","motor":"S/N","chasis":"SM 236","year":"2006","loc":"EST. RINCON DE BAGUALES"},{"id":"M113","code":"VARIOS","cat":"GRANELERA","brand":"BEC-CAR","model":"CINTA TRANSPORTADORA","motor":"S/N","chasis":"SN-2302214","year":"2023","loc":"EST. RINCON DE BAGUALES"},{"id":"M114","code":"VARIOS","cat":"GRANELERA","brand":"BEC-CAR","model":"CINTA TRANSPORTADORA","motor":"S/N","chasis":"SN-2104000","year":"2021","loc":"EST. RINCON DE BAGUALES"},{"id":"M115","code":"VARIOS","cat":"GRANELERA","brand":"BEC-CAR","model":"CINTA TRANSPORTADORA","motor":"S/N","chasis":"SN-2006905","year":"2020","loc":"EST. RINCON DE BAGUALES"},{"id":"M116","code":"CHTR009","cat":"TRACTOR","brand":"VALTRA","model":"VALTRA BH 185","motor":"S/N","chasis":"S/N","year":"","loc":""},{"id":"M117","code":"DLTR008","cat":"TRACTOR","brand":"VALTRA","model":"VALTRA BH 180","motor":"S/N","chasis":"S/N","year":"","loc":""},{"id":"M118","code":"RBBOGGY01","cat":"ACOPLADO","brand":"BOGGY","model":"2 EJES CON DUALES - COMPENSADOR","motor":"S/N","chasis":"S/N","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M119","code":"RBSEMIACOPLADO","cat":"CAPACHO","brand":"HELVETICA","model":"WUR406","motor":"S/N","chasis":"S/N","year":"2009","loc":"EST. RINCON DE BAGUALES"},{"id":"M120","code":"RBACOPCIS01","cat":"ACOPLADO","brand":"","model":"CISTERNA 25.000 LTS","motor":"S/N","chasis":"S/N","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M121","code":"JMACOPLADO01","cat":"CAPACHO","brand":"HELVETICA","model":"FFT776","motor":"S/N","chasis":"","year":"","loc":"EST. DOÑA LUISA"},{"id":"M122","code":"RBSEMIACOPLADO01","cat":"CAPACHO","brand":"HELVETICA","model":"AG021XX","motor":"S/N","chasis":"S/N","year":"2023","loc":"EST. LOS GATOS"},{"id":"M123","code":"RBSEMIACOPLADO02","cat":"CAPACHO","brand":"HELVETICA","model":"AGX21XV","motor":"S/N","chasis":"S/N","year":"2023","loc":"EST. LOS GATOS"},{"id":"M124","code":"NPB095","cat":"CARRETON","brand":"RANDON","model":"SEMI-REMOLQUE","motor":"S/N","chasis":"9ADCSRA3CEM378390","year":"","loc":"EST. RINCON DE BAGUALES"},{"id":"M125","code":"RBTRA02","cat":"REMOLQUE","brand":"RUBIOLO","model":"ACOPLADO","motor":"S/N","chasis":"SN-111616","year":"2018","loc":"EST. RINCON DE BAGUALES"},{"id":"M126","code":"VARIOS","cat":"CISTERNA","brand":"GENTILI","model":"CISTERNA 1500 LTS","motor":"S/N","chasis":"S/N","year":"","loc":"EST. DOÑA LUISA"},{"id":"M127","code":"RBELEVADOR01","cat":"ELEVADOR","brand":"MAQUIN PARTS","model":"HIDAULICO 6 TN - 2C","motor":"S/N","chasis":"S/N","year":"2021","loc":"EST. RINCON DE BAGUALES"},{"id":"M128","code":"RBTR029","cat":"TRACTOR","brand":"JOHN DEERE","model":"8250R","motor":"J06090G022946","chasis":"1BM8250RVTS000208","year":"","loc":"EST. LOS GATOS"},{"id":"M129","code":"RBMO005","cat":"MOTO","brand":"HONDA","model":"XR 150 L","motor":"KD07E-2862842","chasis":"8CHKD0920TP106017","year":"2026","loc":"EST. RINCON DE BAGUALES"},{"id":"M130","code":"RBMO006","cat":"MOTO","brand":"HONDA","model":"XR 150 L","motor":"KD07E-2845921","chasis":"8CHKD0920TP104659","year":"2026","loc":"EST. ABRA GRANDE"},{"id":"M131","code":"VARIOS","cat":"PISADOR","brand":"GROSSPAL","model":"RNV 11000","motor":"","chasis":"","year":"","loc":"EST. LOS GATOS"},{"id":"M132","code":"VARIOS","cat":"CAPACHO","brand":"HELVETICA","model":"AH252DL","motor":"","chasis":"","year":"","loc":"EST. LOS GATOS"}]};
+</script>
+<script>
+"use strict";
+/* ===================== Utilidades ===================== */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+function ic(name,size=18,cls=''){const b=ICONS[name]||ICONS.box;return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${b}</svg>`}
+function hydrateIcons(root=document){root.querySelectorAll('[data-ic]').forEach(el=>{const n=el.dataset.ic;const cls=el.className||'';const size=el.dataset.sz||18;el.outerHTML=ic(n,+size,cls)})}
+const NIL='Sin dato';
+const lab=v=>v===''?NIL:v;
+
+/* ===================== Iconos de categoría (dinámicos) ===================== */
+const ICON_RULES=[
+  [/GF|TRACTOR/,'tractor'],[/PULVERIZ|FUMIG/,'spray-can'],[/CAMIONETA|PICK|AUTO/,'car-front'],
+  [/GENERADOR|ELECTROG|GRUPO/,'zap'],[/MOTO(?!NIV|LVA)|CUATRI/,'bike'],[/EXTRACT|VENTIL/,'fan'],
+  [/MONTACARGA|AUTOELEV/,'forklift'],[/EMBOLS/,'package'],[/CAMION/,'truck'],[/CAPACHO|BATEA|TOLVA CHICA|GRANELERA/,'container'],[/RASTRA|DESCOMPACT|PISADOR/,'cog'],
+  [/FERTILIZ|SEMBRAD|SIEMBRA/,'sprout'],[/MIXER|MEZCLA/,'blend'],[/CORTAD|SEGADOR|CORTE/,'scissors'],
+  [/DESMALEZ|MALEZA/,'leaf'],[/INOCUL/,'syringe'],[/ACOPLADO|REMOLQUE|SEMI/,'caravan'],
+  [/MOTONIVEL|NIVELAD|PALA|EXCAV/,'construction'],[/CHIMANGO|SINFIN|COSECH/,'wheat'],[/MONOTOLVA|TOLVA|TANQUE|CISTERNA/,'cylinder'],
+  [/CINTA|TRANSPORT/,'arrow-right-left'],[/CARRETON|CARRETA/,'truck'],[/ELEVADOR|ELEV/,'arrow-up-from-line'],
+  [/EQUIPO|HERRAM/,'wrench']
+];
+const PICK_ICONS=['tractor','truck','car-front','bike','zap','forklift','wrench','spray-can','sprout','package','container','scissors','cog','leaf','wheat','cylinder','construction','box'];
+let catIcons={}; // overrides del usuario
+function catIcon(name){
+  if(catIcons[name]) return catIcons[name];
+  const n=norm(name).toUpperCase();
+  for(const [re,i] of ICON_RULES) if(re.test(n)) return i;
+  return 'box';
+}
+
+/* ===================== Datos ===================== */
+const STORE='inventario-maquinarias-v1';
+let uid=0;
+const LOCS=['EST. RINCON DE BAGUALES','EST. LOS GATOS','EST. ABRA GRANDE','EST. DOÑA LUISA','EST. EL JURAMENTO'];
+const LOCMAP={'RINCON DE BAGUALES':LOCS[0],'LOS GATOS':LOCS[1],'LOS GATOS (BELTRAN)':LOCS[1],'ABRA GRANDE':LOCS[2],'DOÑA LUISA':LOCS[3],'EL JURAMENTO':LOCS[4]};
+const fixLoc=v=>{v=String(v||'').trim().toUpperCase();return LOCS.includes(v)?v:(LOCMAP[v]||'')};
+const FIELDS=['code','cat','brand','model','motor','chasis','year','loc'];
+const newId=()=>'L'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function unitRow(u){const o={};FIELDS.forEach(k=>o[k]=String(u[k]??'').trim());o.loc=fixLoc(o.loc);return o}
+function fromUnit(u){const r={_id:++uid,id:u.id||newId(),...unitRow(u)};touch(r);return r}
+function touch(r){r._s=norm([r.code,r.cat,r.brand,r.model,r.motor,r.chasis,r.year,r.loc].join(' | '))}
+const state={rows:[],q:'',f:{code:'',cats:new Set(),brands:new Set(),locs:new Set()},sort:{key:'code',dir:1},sel:new Set(),dirty:new Set(),deleted:new Set(),baseVersion:0};
+function load(){
+  state.baseVersion=BASE_DB.version;
+  let s=null;try{s=JSON.parse(localStorage.getItem(STORE)||'null')}catch(e){}
+  if(s&&s.ver===3&&Array.isArray(s.rows)){
+    state.rows=s.rows.map(r=>{r._id=++uid;r.loc=fixLoc(r.loc);touch(r);return r});
+    state.dirty=new Set(s.dirty||[]);state.deleted=new Set(s.deleted||[]);catIcons=s.catIcons||{};state.baseVersion=s.baseVersion||0;
+    mergeRemote(BASE_DB);return;
+  }
+  if(s&&Array.isArray(s.rows)){ /* migración de versiones anteriores */
+    const used=new Set();state.rows=[];
+    s.rows.forEach(o=>{
+      const m=BASE_DB.units.find(b=>!used.has(b.id)&&b.code===o.code&&b.chasis===o.chasis&&b.motor===o.motor&&b.model===o.model);
+      const r=fromUnit({...o,id:m?m.id:newId()});
+      if(m){used.add(m.id);const mu=unitRow(m);if(FIELDS.some(k=>mu[k]!==r[k]))state.dirty.add(r.id)}else state.dirty.add(r.id);
+      state.rows.push(r)});
+    BASE_DB.units.forEach(b=>{if(!used.has(b.id))state.deleted.add(b.id)});
+    catIcons=s.catIcons||{};save();return;
+  }
+  state.rows=BASE_DB.units.map(fromUnit);
+}
+/* Fusiona la base del repositorio (JSON) con los cambios locales: lo editado/agregado/eliminado en este equipo se respeta. */
+function mergeRemote(db){
+  if(!db||!Array.isArray(db.units)||(db.version||0)<=state.baseVersion)return null;
+  const remote=new Map(db.units.map(u=>[u.id,u]));const local=new Map(state.rows.map(r=>[r.id,r]));let n=0;
+  state.rows=state.rows.filter(r=>{if(remote.has(r.id)||state.dirty.has(r.id))return true;n++;return false});
+  remote.forEach((u,id)=>{
+    if(state.deleted.has(id))return;
+    const r=local.get(id);
+    if(!r){state.rows.push(fromUnit(u));n++}
+    else if(!state.dirty.has(id)){const nu=unitRow(u);if(FIELDS.some(k=>nu[k]!==r[k])){Object.assign(r,nu);touch(r);n++}}
+  });
+  state.deleted.forEach(id=>{if(!remote.has(id))state.deleted.delete(id)});
+  state.baseVersion=db.version;save();return n;
+}
+function exportDb(){
+  const units=state.rows.map(({_id,_s,...r})=>r);
+  const db={version:Math.max(state.baseVersion,BASE_DB.version)+1,updated:new Date().toISOString().slice(0,10),locations:LOCS,units};
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,1)],{type:'application/json'}));a.download='maquinarias.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast('Base exportada (versión '+db.version+'). Subila a data/ del repositorio.');
+}
+function save(){try{localStorage.setItem(STORE,JSON.stringify({ver:3,baseVersion:state.baseVersion,dirty:[...state.dirty],deleted:[...state.deleted],rows:state.rows.map(({_s,...r})=>r),catIcons}))}catch(e){}}
+
+/* ===================== Filtrado ===================== */
+function tokens(){return norm(state.q).split(/\s+/).filter(Boolean)}
+function match(r,skip,tk){
+  const f=state.f;
+  if(skip!=='q'&&tk.length&&!tk.every(t=>r._s.includes(t)))return false;
+  if(skip!=='code'&&f.code&&!norm(r.code).includes(norm(f.code).trim()))return false;
+  if(skip!=='cats'&&f.cats.size&&!f.cats.has(r.cat))return false;
+  if(skip!=='brands'&&f.brands.size&&!f.brands.has(r.brand))return false;
+  if(skip!=='locs'&&f.locs.size&&!f.locs.has(r.loc))return false;
+  return true;
+}
+function view(){
+  const tk=tokens();const {key,dir}=state.sort;
+  const rows=state.rows.filter(r=>match(r,null,tk));
+  rows.sort((a,b)=>{
+    let x=a[key],y=b[key];
+    if(key==='year'){x=x===''?null:+x;y=y===''?null:+y;if(x===null&&y===null)return 0;if(x===null)return 1;if(y===null)return -1;return (x-y)*dir}
+    if(x===''&&y!=='')return 1;if(y===''&&x!=='')return -1;
+    return String(x).localeCompare(String(y),'es',{numeric:true,sensitivity:'base'})*dir;
+  });
+  return rows;
+}
+function counts(prop,skip){
+  const tk=tokens();const m=new Map();
+  state.rows.forEach(r=>{if(!m.has(r[prop]))m.set(r[prop],0)});
+  state.rows.forEach(r=>{if(match(r,skip,tk))m.set(r[prop],m.get(r[prop])+1)});
+  return m;
+}
+const DIM={cats:{prop:'cat',label:'Categoría'},brands:{prop:'brand',label:'Marca'},locs:{prop:'loc',label:'Ubicación'}};
+function options(dim){
+  const m=counts(DIM[dim].prop,dim);
+  return [...m].map(([v,c])=>({v,c})).sort((a,b)=>{if(a.v==='')return 1;if(b.v==='')return -1;return a.v.localeCompare(b.v,'es')});
+}
+function anyFilter(){const f=state.f;return !!(state.q||f.code||f.cats.size||f.brands.size||f.locs.size)}
+function clearFilters(){state.q='';$('#q').value='';state.f.code='';$('#f-code').value='';state.f.cats.clear();state.f.brands.clear();state.f.locs.clear();render()}
+
+/* ===================== Resaltado ===================== */
+function hl(text){
+  const t=String(text??'');const tk=tokens();
+  if(!tk.length||!t)return esc(t);
+  const n=norm(t);if(n.length!==t.length)return esc(t);
+  const rg=[];tk.forEach(k=>{let i=n.indexOf(k);while(i>-1){rg.push([i,i+k.length]);i=n.indexOf(k,i+k.length)}});
+  if(!rg.length)return esc(t);
+  rg.sort((a,b)=>a[0]-b[0]);const mg=[rg[0].slice()];
+  for(let i=1;i<rg.length;i++){const l=mg[mg.length-1];if(rg[i][0]<=l[1])l[1]=Math.max(l[1],rg[i][1]);else mg.push(rg[i].slice())}
+  let out='',p=0;mg.forEach(([a,b])=>{out+=esc(t.slice(p,a))+'<mark>'+esc(t.slice(a,b))+'</mark>';p=b});
+  return out+esc(t.slice(p));
+}
+
+/* ===================== Render ===================== */
+function render(){
+  $('.main').classList.toggle('focus',state.f.cats.size>0);
+  renderSide();renderKpis();renderChips();renderFilters();renderBar();renderTable();
+  if(pop&&pop.refresh)pop.refresh();
+}
+function renderSide(){
+  $('#nav-total').textContent=state.rows.length;
+  const m=counts('loc','locs');
+  const list=[...m].sort((a,b)=>{if(a[0]==='')return 1;if(b[0]==='')return -1;return a[0].localeCompare(b[0],'es')});
+  $('#locs').innerHTML=list.map(([v,c])=>`<button class="loc ${state.f.locs.has(v)?'on':''}" data-v="${esc(v)}"><i class="dot"></i><span class="nm">${esc(lab(v))}</span><span class="n">${c}</span></button>`).join('');
+}
+function topOf(rows,prop){const m=new Map();rows.forEach(r=>{if(r[prop]!=='')m.set(r[prop],(m.get(r[prop])||0)+1)});let b=null;m.forEach((c,k)=>{if(!b||c>b[1])b=[k,c]});return b}
+function renderKpis(){
+  const rows=view(),all=state.rows;
+  const dist=(a,p)=>new Set(a.map(r=>r[p]).filter(x=>x!=='')).size;
+  const pct=all.length?Math.round(rows.length/all.length*100):0;
+  const tc=topOf(rows,'cat'),tb=topOf(rows,'brand'),tl=topOf(rows,'loc');
+  const card=(lb,ic_,val,pill,ft)=>`<article class="card kpi"><div class="row"><div><div class="lb">${lb}</div><div class="val"><b>${val}</b><span class="pill">${pill}</span></div></div><div class="ib">${ic(ic_,20)}</div></div><div class="ft">${ft}</div></article>`;
+  const t=(x)=>x?`Principal: <b>${esc(x[0])}</b> · ${x[1]}`:'Sin datos';
+  $('#kpis').innerHTML=
+    card('Unidades','layers',rows.length,pct+'%',`de <b>${all.length}</b> unidades en total`)+
+    card('Categorías','tags',dist(rows,'cat'),'de '+dist(all,'cat'),t(tc))+
+    card('Marcas','badge-check',dist(rows,'brand'),'de '+dist(all,'brand'),t(tb))+
+    card('Ubicaciones','map-pin',dist(rows,'loc'),'de '+dist(all,'loc'),t(tl));
+}
+let chipOrder=null;
+function renderChips(){
+  const tot=new Map();state.rows.forEach(r=>tot.set(r.cat,(tot.get(r.cat)||0)+1));
+  const order=[...tot].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'es')).map(x=>x[0]);
+  const cur=counts('cat','cats');
+  const keep=$('#strip').scrollLeft;
+  const allOn=state.f.cats.size===0;
+  let h=`<button class="chip ${allOn?'on':''}" data-v="__all"><span class="circ">${ic('layers',17)}</span><span class="cnt">${[...cur.values()].reduce((a,b)=>a+b,0)}</span><span class="nm">TODAS</span></button>`;
+  order.forEach(c=>{const n=cur.get(c)||0;h+=`<button class="chip ${state.f.cats.has(c)?'on':''} ${n===0&&!state.f.cats.has(c)?'zero':''}" data-v="${esc(c)}" title="${esc(c)}"><span class="circ">${ic(catIcon(c),17)}</span><span class="cnt">${n}</span><span class="nm">${esc(c)}</span></button>`});
+  $('#strip').innerHTML=h;$('#strip').scrollLeft=keep;
+  $('#cats-hint').textContent=state.f.cats.size?`${state.f.cats.size} seleccionada${state.f.cats.size>1?'s':''}`:`${order.length} categorías`;
+}
+function selLabel(set,ph){
+  if(!set.size)return `<span class="v ph">${ph}</span>`;
+  const a=[...set];
+  return `<span class="v">${esc(lab(a[0]))}</span>${a.length>1?`<span class="n">+${a.length-1}</span>`:''}`;
+}
+function renderFilters(){
+  $('#s-cat').innerHTML=selLabel(state.f.cats,'Todas las categorías');
+  $('#s-brand').innerHTML=selLabel(state.f.brands,'Todas las marcas');
+  $('#s-loc').innerHTML=selLabel(state.f.locs,'Todas las ubicaciones');
+  $('#ctl-code').classList.toggle('has',!!state.f.code);
+  $('#searchbox').classList.toggle('has',!!state.q);
+}
+function renderBar(){
+  const rows=view();const bar=$('#bar');
+  const ids=new Set(state.rows.map(r=>r._id));state.sel.forEach(i=>{if(!ids.has(i))state.sel.delete(i)});
+  if(state.sel.size){
+    bar.className='bar bulk';
+    bar.innerHTML=`<div class="cnt">${state.sel.size} seleccionada${state.sel.size>1?'s':''} <span>de ${state.rows.length}</span></div><div class="sp"></div>
+      <button class="btn ghost sm" data-b="edit">${ic('pencil',16)}Editar</button>
+      <button class="btn ghost sm" data-b="exp">${ic('download',16)}Exportar</button>
+      <button class="btn danger sm" data-b="del">${ic('trash-2',16)}Eliminar</button>
+      <button class="btn ghost sm" data-b="none" aria-label="Quitar selección">${ic('x',16)}</button>`;
+    return;
+  }
+  bar.className='bar';
+  const tags=[];
+  if(state.q)tags.push(['q','Búsqueda: '+state.q]);
+  if(state.f.code)tags.push(['code','Código: '+state.f.code]);
+  state.f.cats.forEach(v=>tags.push(['cats:'+v,lab(v)]));
+  state.f.brands.forEach(v=>tags.push(['brands:'+v,lab(v)]));
+  state.f.locs.forEach(v=>tags.push(['locs:'+v,lab(v)]));
+  bar.innerHTML=`<div class="cnt">${rows.length} <span>${rows.length===1?'unidad':'unidades'}${anyFilter()?' encontradas':''}</span></div>
+    <div class="tags">${tags.map(([k,t])=>`<span class="tag"><span>${esc(t)}</span><button data-t="${esc(k)}" aria-label="Quitar filtro">${ic('x',12)}</button></span>`).join('')}</div>
+    ${anyFilter()?`<button class="btn ghost sm" data-b="clear">${ic('rotate-ccw',15)}Limpiar filtros</button>`:''}`;
+}
+const COLS=[['code','Código'],['cat','Categoría'],['brand','Marca'],['model','Modelo / Patente'],['motor','N° Motor'],['chasis','Chasis'],['year','Año'],['loc','Ubicación']];
+let lastIdx=null,shown=[];
+function renderTable(){
+  shown=view();
+  const ids=shown.map(r=>r._id);const nSel=ids.filter(i=>state.sel.has(i)).length;
+  const hc=nSel===0?'':(nSel===ids.length&&ids.length?'on':'mix');
+  $('#thead').innerHTML=`<th class="c-chk"><button class="chk ${hc}" data-all role="checkbox" aria-checked="${hc==='on'?'true':hc==='mix'?'mixed':'false'}" aria-label="Seleccionar todas las filas visibles">${ic('check',11)}</button></th>`+
+    COLS.map(([k,t])=>{const s=state.sort.key===k;return `<th class="s ${s?'sorted':''}" data-sort="${k}" aria-sort="${s?(state.sort.dir>0?'ascending':'descending'):'none'}"><span class="th">${t}${ic(s?(state.sort.dir>0?'arrow-up':'arrow-down'):'arrow-up-down',11)}</span></th>`}).join('')+`<th class="c-act"></th>`;
+  $('#tbody').innerHTML=shown.map(r=>{const s=state.sel.has(r._id);
+    return `<tr data-id="${r._id}" class="${s?'sel':''}"><td class="c-chk"><button class="chk ${s?'on':''}" data-act="sel" role="checkbox" aria-checked="${s}" aria-label="Seleccionar ${esc(r.code)}">${ic('check',11)}</button></td>
+    <td class="c-code">${hl(r.code)}</td>
+    <td><span class="catpill"><i>${ic(catIcon(r.cat),11)}</i>${hl(r.cat)}</span></td>
+    <td>${r.brand?hl(r.brand):'<span class="mut">—</span>'}</td>
+    <td>${r.model?hl(r.model):'<span class="mut">—</span>'}</td>
+    <td class="c-motor">${hl(r.motor)||'—'}</td><td class="c-chasis">${hl(r.chasis)||'—'}</td>
+    <td class="mut">${r.year?hl(r.year):'—'}</td>
+    <td><span class="lcell">${ic('map-pin',12)}${r.loc?hl(r.loc):'<span class="mut">—</span>'}</span></td>
+    <td class="c-act"><button class="iconbtn" data-act="edit" aria-label="Editar ${esc(r.code)}">${ic('pencil',14)}</button><button class="iconbtn danger" data-act="del" aria-label="Eliminar ${esc(r.code)}">${ic('trash-2',14)}</button></td></tr>`}).join('');
+  const em=$('#empty');
+  if(!shown.length){em.hidden=false;em.className='empty';em.innerHTML=`<div class="ib">${ic('inbox',24)}</div><b>Sin resultados</b><span>No hay unidades que coincidan con los filtros actuales.</span><button class="btn ghost sm" data-b="clear">Limpiar filtros</button>`}
+  else{em.hidden=true;em.innerHTML=''}
+}
+
+/* ===================== Popovers (custom, sin controles nativos) ===================== */
+let pop=null;
+function closePop(){if(!pop)return;pop.el.remove();pop.anchor.classList.remove('open');window.removeEventListener('resize',closePop);pop=null}
+function place(el,anchor){
+  const r=anchor.getBoundingClientRect();const w=Math.max(r.width,240);
+  el.style.width=w+'px';el.style.left=Math.min(Math.max(8,r.left),innerWidth-w-8)+'px';
+  const below=innerHeight-r.bottom-12,above=r.top-12;
+  const up=below<220&&above>below;const mh=Math.min(340,up?above:below);
+  el.style.maxHeight=mh+'px';
+  if(up){el.style.top='auto';el.style.bottom=(innerHeight-r.top+6)+'px'}else{el.style.bottom='auto';el.style.top=(r.bottom+6)+'px'}
+}
+/* multi: filtros con casillas */
+function openMulti(anchor,dim){
+  if(pop&&pop.anchor===anchor){closePop();return}closePop();
+  const el=document.createElement('div');el.className='pop';
+  el.innerHTML=`<div class="ps">${ic('search',16)}<input placeholder="Buscar ${DIM[dim].label.toLowerCase()}…" aria-label="Buscar opción"></div><div class="pl"></div><div class="pf"><span></span><button data-clear>Limpiar</button></div>`;
+  document.body.appendChild(el);anchor.classList.add('open');place(el,anchor);
+  const inp=$('input',el),list=$('.pl',el);
+  const refresh=()=>{
+    const q=norm(inp.value);const set=state.f[dim];
+    const opts=options(dim).filter(o=>norm(lab(o.v)).includes(q));
+    list.innerHTML=opts.length?opts.map(o=>`<div class="opt ${o.c===0&&!set.has(o.v)?'dim':''}" role="option" aria-selected="${set.has(o.v)}" data-v="${esc(o.v)}"><span class="chk ${set.has(o.v)?'on':''}">${ic('check',14)}</span><span class="t">${esc(lab(o.v))}</span><span class="c">${o.c}</span></div>`).join(''):'<div class="none">Sin coincidencias</div>';
+    $('.pf span',el).textContent=set.size?`${set.size} seleccionada${set.size>1?'s':''}`:'Ninguna seleccionada';
+  };
+  list.addEventListener('click',e=>{const b=e.target.closest('.opt');if(!b)return;const v=b.dataset.v,set=state.f[dim];set.has(v)?set.delete(v):set.add(v);render()});
+  $('[data-clear]',el).onclick=()=>{state.f[dim].clear();render()};
+  inp.addEventListener('input',refresh);
+  pop={el,anchor,refresh};refresh();window.addEventListener('resize',closePop);setTimeout(()=>inp.focus(),0);
+}
+/* suggest: autocompletado para campos de texto del formulario */
+function attachSuggest(input,getList,{onPick,newLabel}={}){
+  let hi=-1,items=[],skip=false,showAll=false;const ctl=input.closest('.ctl');
+  const btn=ctl.querySelector('[data-open]');
+  const open=(all)=>{
+    showAll=all;closePop();
+    const el=document.createElement('div');el.className='pop';el.innerHTML='<div class="pl"></div>';
+    document.body.appendChild(el);place(el,input);input.classList.add('open');
+    const list=$('.pl',el);
+    const refresh=()=>{
+      const q=showAll?'':norm(input.value).trim();const val=input.value.trim().toUpperCase();
+      items=getList().filter(o=>!q||norm(o.v).includes(q)).sort((a,b)=>q?((norm(b.v).startsWith(q)-norm(a.v).startsWith(q))||0):0);
+      const exact=getList().some(o=>o.v===val);
+      let h=items.map((o,i)=>`<button type="button" class="opt ${i===hi?'hl':''}" data-i="${i}"><span class="t">${esc(o.v)}</span><span class="c">${o.c??''}</span></button>`).join('');
+      if(val&&!exact&&newLabel)h+=`<button type="button" class="opt new" data-new>${ic('plus',15)}<span class="t">${newLabel} “${esc(val)}”</span></button>`;
+      if(!items.length){closePop();return}
+      list.innerHTML=h;
+    };
+    list.addEventListener('mousedown',e=>{e.preventDefault();const b=e.target.closest('.opt');if(!b)return;if(b.dataset.new!==undefined){input.value=input.value.trim().toUpperCase();}else{input.value=items[+b.dataset.i].v}closePop();skip=true;onPick&&onPick(input.value);input.dispatchEvent(new Event('input',{bubbles:true}));skip=false});
+    pop={el,anchor:input,refresh};window.addEventListener('resize',closePop);refresh();
+  };
+  input.addEventListener('mousedown',()=>{if(!pop||pop.anchor!==input)setTimeout(()=>open(true),0)});
+  input.addEventListener('input',()=>{if(skip)return;showAll=false;if(!pop||pop.anchor!==input)open(false);else{hi=-1;pop.refresh()}});
+  input.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){if(!pop)open(false);e.preventDefault();hi=Math.max(-1,Math.min(items.length-1,hi+(e.key==='ArrowDown'?1:-1)));pop.refresh();const h=pop.el.querySelector('.hl');h&&h.scrollIntoView({block:'nearest'})}
+    else if(e.key==='Enter'&&pop&&hi>=0&&items[hi]){e.preventDefault();input.value=items[hi].v;closePop();skip=true;onPick&&onPick(input.value);input.dispatchEvent(new Event('input',{bubbles:true}));skip=false}
+    else if(e.key==='Escape'&&pop){e.stopPropagation();closePop()}
+  });
+  input.addEventListener('blur',()=>setTimeout(()=>{if(pop&&pop.anchor===input)closePop();input.value=input.value.trim().toUpperCase()},120));
+  btn&&btn.addEventListener('mousedown',e=>{e.preventDefault();if(pop&&pop.anchor===input){closePop()}else{input.focus();open(true)}});
+}
+document.addEventListener('mousedown',e=>{if(pop&&!pop.el.contains(e.target)&&!pop.anchor.contains(e.target)&&!(pop.anchor.closest&&pop.anchor.closest('.ctl')?.contains(e.target)))closePop()});
+
+/* ===================== Toasts ===================== */
+function toast(msg,action){
+  const t=document.createElement('div');t.className='toast';t.innerHTML=`${ic('check',18)}<span>${esc(msg)}</span>`;
+  if(action){const b=document.createElement('button');b.textContent=action.label;b.onclick=()=>{action.fn();t.remove()};t.appendChild(b)}
+  $('#toasts').appendChild(t);setTimeout(()=>t.remove(),action?6500:3200);
+}
+
+/* ===================== Modales ===================== */
+function modal({title,sub,icon='box',red=false,sm=false,body,actions}){
+  closePop();
+  const ov=document.createElement('div');ov.className='ov';
+  ov.innerHTML=`<div class="modal ${sm?'sm':''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><div class="ib ${red?'red':''}">${ic(icon,22)}</div><div><h3>${esc(title)}</h3>${sub?`<p>${sub}</p>`:''}</div><button class="iconbtn" data-close aria-label="Cerrar">${ic('x',18)}</button></header><div class="body">${body}</div><footer></footer></div>`;
+  document.body.appendChild(ov);
+  const foot=$('footer',ov);
+  actions.forEach(a=>{const b=document.createElement('button');b.type='button';b.className='btn '+(a.kind||'ghost');b.innerHTML=a.label;b.onclick=()=>a.fn(ov);foot.appendChild(b)});
+  const close=()=>{closePop();ov.remove();document.removeEventListener('keydown',onKey)};
+  const onKey=e=>{if(e.key==='Escape'&&!pop)close()};
+  document.addEventListener('keydown',onKey);
+  ov.addEventListener('mousedown',e=>{if(e.target===ov)close()});
+  $('[data-close]',ov).onclick=close;ov.close=close;
+  return ov;
+}
+function fieldHtml(id,label,extra='',opts={}){
+  const sug=opts.suggest;
+  return `<div class="field ${opts.full?'full':''}"><label for="${id}">${label}</label><div class="ctl"><input class="input" id="${id}" ${extra} autocomplete="off" spellcheck="false">${sug?`<button type="button" data-open class="xbtn" style="display:grid;pointer-events:auto" tabindex="-1" aria-label="Ver opciones">${ic('chevron-down',16)}</button>`:''}</div><div class="err" data-err="${id}"></div></div>`;
+}
+const U=s=>String(s||'').trim().toUpperCase();
+const locList=()=>LOCS.map(v=>({v,c:state.rows.filter(r=>r.loc===v).length}));
+function uniq(prop){const m=new Map();state.rows.forEach(r=>{if(r[prop])m.set(r[prop],(m.get(r[prop])||0)+1)});return [...m].sort((a,b)=>a[0].localeCompare(b[0],'es')).map(([v,c])=>({v,c}))}
+function nextCode(cat){
+  const rs=state.rows.filter(r=>r.cat===cat);if(!rs.length)return '';
+  const pc=new Map();rs.forEach(r=>{const p=(r.code.match(/^[A-Z]+/)||[''])[0];if(p&&p!=='VARIOS')pc.set(p,(pc.get(p)||0)+1)});
+  let pre='';let b=0;pc.forEach((c,p)=>{if(c>b){b=c;pre=p}});if(!pre||pre==='VARIOS')return '';
+  let mx=0,w=3;state.rows.forEach(r=>{if(r.code.startsWith(pre)){const m=r.code.slice(pre.length).match(/^\d+$/);if(m){mx=Math.max(mx,+m[0]);w=Math.max(w,m[0].length>w?m[0].length:w)}}});
+  return pre+String(mx+1).padStart(Math.min(w,4),'0');
+}
+function openForm(row){
+  const edit=!!row;const orig=row?{...row}:null;
+  const body=`<form id="mform" novalidate><div class="grid2">
+    ${fieldHtml('m-code','Código (ID)','placeholder="Ej: RBTR030 o VARIOS" maxlength="20"')}
+    ${fieldHtml('m-year','Año','placeholder="Ej: 2018" inputmode="numeric" maxlength="4"')}
+    ${fieldHtml('m-cat','Categoría','placeholder="Elegí o escribí una nueva"',{suggest:1})}
+    ${fieldHtml('m-brand','Marca','placeholder="Elegí o escribí una nueva"',{suggest:1})}
+    <div class="full" id="iconpick" hidden></div>
+    ${fieldHtml('m-model','Modelo / Patente','placeholder="Ej: BM100 4X2"',{full:1})}
+    ${fieldHtml('m-motor','N° Motor','placeholder="Ej: 420DST84950"')}
+    ${fieldHtml('m-chasis','Chasis','placeholder="Ej: BM102738712"')}
+    ${fieldHtml('m-loc','Ubicación','placeholder="Elegí o escribí una nueva"',{full:1,suggest:1})}
+  </div></form>`;
+  const ov=modal({title:edit?'Editar unidad':'Nueva unidad',sub:edit?`Código <b>${esc(row.code)}</b>`:'Completá los datos para dar de alta una maquinaria.',icon:edit?'pencil':'plus',body,
+    actions:[{label:'Cancelar',fn:o=>o.close()},{label:edit?'Guardar cambios':'Agregar unidad',kind:'primary',fn:submit}]});
+  const g=id=>$('#'+id,ov);
+  const init={code:row?.code,year:row?.year,cat:row?.cat,brand:row?.brand,model:row?.model,motor:row?.motor,chasis:row?.chasis,loc:row?.loc};
+  Object.entries(init).forEach(([k,v])=>{const i=g('m-'+k);if(i)i.value=v||''});
+  let chosenIcon=null;
+  const pickBox=g('iconpick');
+  function syncIcons(){
+    const c=U(g('m-cat').value);const isNew=c&&!state.rows.some(r=>r.cat===c)&&!(row&&row.cat===c);
+    pickBox.hidden=!isNew;if(!isNew){chosenIcon=null;return}
+    const cur=chosenIcon||catIcons[c]||catIcon(c);
+    pickBox.innerHTML=`<div class="iconpick"><div class="cap">Categoría nueva: elegí el ícono del botón</div>${PICK_ICONS.map(n=>`<button type="button" data-i="${n}" class="${n===cur?'on':''}" aria-label="${n}">${ic(n,18)}</button>`).join('')}</div>`;
+  }
+  pickBox.addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;chosenIcon=b.dataset.i;syncIcons()});
+  attachSuggest(g('m-cat'),()=>uniq('cat'),{newLabel:'Crear categoría',onPick:()=>{if(!edit&&!g('m-code').value.trim())g('m-code').value=nextCode(U(g('m-cat').value));syncIcons()}});
+  g('m-cat').addEventListener('input',syncIcons);
+  g('m-cat').addEventListener('blur',()=>setTimeout(()=>{if(!edit&&!g('m-code').value.trim()){const n=nextCode(U(g('m-cat').value));if(n)g('m-code').value=n}},160));
+  attachSuggest(g('m-brand'),()=>uniq('brand'),{newLabel:'Crear marca'});
+  attachSuggest(g('m-loc'),locList);
+  g('m-year').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,4)});
+  $('#mform',ov).addEventListener('submit',e=>{e.preventDefault();submit(ov)});
+  $('#mform',ov).addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&!pop){e.preventDefault();submit(ov)}});
+  syncIcons();setTimeout(()=>g('m-code').focus(),30);
+  function setErr(id,msg){const i=g(id);i.classList.toggle('bad',!!msg);$(`[data-err="${id}"]`,ov).textContent=msg||''}
+  function submit(){
+    closePop();
+    const v={code:U(g('m-code').value),cat:U(g('m-cat').value),brand:U(g('m-brand').value),model:U(g('m-model').value),motor:U(g('m-motor').value),chasis:U(g('m-chasis').value),year:g('m-year').value.trim(),loc:U(g('m-loc').value)};
+    let ok=true;['m-code','m-cat','m-year','m-loc'].forEach(i=>setErr(i,''));
+    if(!v.code){setErr('m-code','El código es obligatorio.');ok=false}
+    else if((!edit||v.code!==orig.code)&&v.code!=='VARIOS'&&state.rows.some(r=>r.code===v.code)){setErr('m-code','Ya existe una unidad con ese código.');ok=false}
+    if(!v.cat){setErr('m-cat','La categoría es obligatoria.');ok=false}
+    if(v.loc&&!LOCS.includes(v.loc)){setErr('m-loc','Elegí una de las 5 ubicaciones de la lista.');ok=false}
+    if(v.year&&(+v.year<1900||+v.year>new Date().getFullYear()+1)){setErr('m-year','Ingresá un año válido (1900–'+(new Date().getFullYear()+1)+').');ok=false}
+    if(!ok){const f=$('.input.bad',ov);f&&f.focus();return}
+    if(chosenIcon&&!pickBox.hidden)catIcons[v.cat]=chosenIcon;
+    if(edit){Object.assign(row,v);touch(row);state.dirty.add(row.id);toast('Cambios guardados en '+v.code)}
+    else{const r={_id:++uid,id:newId(),...v};touch(r);state.rows.push(r);state.dirty.add(r.id);toast('Unidad '+v.code+' agregada')}
+    save();ov.close();render();
+  }
+}
+function openBulkEdit(){
+  const n=state.sel.size;
+  const body=`<div class="grid2">
+    ${fieldHtml('b-cat','Categoría','placeholder="Sin cambios"',{full:1,suggest:1})}
+    ${fieldHtml('b-brand','Marca','placeholder="Sin cambios"',{suggest:1})}
+    ${fieldHtml('b-loc','Ubicación','placeholder="Sin cambios"',{suggest:1})}
+  </div><p class="note">Los campos vacíos no se modifican.</p>`;
+  const ov=modal({title:`Editar ${n} unidad${n>1?'es':''}`,sub:'Aplicá un cambio a todas las unidades seleccionadas.',icon:'pencil',body,
+    actions:[{label:'Cancelar',fn:o=>o.close()},{label:'Aplicar cambios',kind:'primary',fn:apply}]});
+  attachSuggest($('#b-cat',ov),()=>uniq('cat'),{newLabel:'Crear categoría'});
+  attachSuggest($('#b-brand',ov),()=>uniq('brand'),{newLabel:'Crear marca'});
+  attachSuggest($('#b-loc',ov),locList);
+  function apply(){
+    const c=U($('#b-cat',ov).value),b=U($('#b-brand',ov).value),l=U($('#b-loc',ov).value);
+    if(l&&!LOCS.includes(l)){$('[data-err="b-loc"]',ov).textContent='Elegí una de las 5 ubicaciones de la lista.';return}
+    if(!c&&!b&&!l){$('[data-err="b-loc"]',ov).textContent='Completá al menos un campo.';return}
+    state.rows.filter(r=>state.sel.has(r._id)).forEach(r=>{if(c)r.cat=c;if(b)r.brand=b;if(l)r.loc=l;touch(r);state.dirty.add(r.id)});
+    save();ov.close();render();toast(`${n} unidad${n>1?'es':''} actualizada${n>1?'s':''}`);
+  }
+}
+function confirmDelete(rows){
+  const n=rows.length;
+  const body=n===1?`<p>Vas a eliminar <b>${esc(rows[0].code)}</b> (${esc(rows[0].cat)}${rows[0].brand?' · '+esc(rows[0].brand):''}). Podés deshacerlo después.</p>`:`<p>Vas a eliminar <b>${n} unidades</b> seleccionadas. Podés deshacerlo después.</p>`;
+  modal({title:n===1?'Eliminar unidad':`Eliminar ${n} unidades`,icon:'trash-2',red:true,sm:true,body,
+    actions:[{label:'Cancelar',fn:o=>o.close()},{label:'Eliminar',kind:'danger',fn:o=>{
+      const ids=new Set(rows.map(r=>r._id));const removed=state.rows.filter(r=>ids.has(r._id));
+      state.rows=state.rows.filter(r=>!ids.has(r._id));ids.forEach(i=>state.sel.delete(i));removed.forEach(r=>{state.deleted.add(r.id);state.dirty.delete(r.id)});
+      save();o.close();render();
+      toast(n===1?`${removed[0].code} eliminada`:`${n} unidades eliminadas`,{label:'Deshacer',fn:()=>{state.rows.push(...removed);removed.forEach(r=>{state.deleted.delete(r.id);state.dirty.add(r.id)});save();render()}});
+    }}]});
+}
+
+/* ===================== Exportar CSV ===================== */
+function exportCsv(rows,name){
+  const head=['CODIGO','CATEGORIA','MARCA','MODELO / PATENTE','N° MOTOR','CHASIS','AÑO','UBICACIÓN'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const csv='﻿'+[head.map(q).join(';'),...rows.map(r=>FIELDS.map(k=>q(r[k])).join(';'))].join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast(`${rows.length} unidades exportadas`);
+}
+const stamp=()=>new Date().toISOString().slice(0,10);
+
+/* ===================== Eventos ===================== */
+function init(){
+  hydrateIcons();
+  $('#logo').innerHTML=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/><path d="M12 7.5 16.5 12 12 16.5 7.5 12z" fill="currentColor"/></svg>`;
+  $('#hamb').innerHTML=ic('menu',20);$('#qclr').innerHTML=ic('x',16);$('#x-code').innerHTML=ic('x',15);
+  load();render();
+  fetch('data/maquinarias.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(db=>{
+    const n=mergeRemote(db);if(n!==null){render();toast(`Base actualizada a la versión ${db.version}${n?` (${n} cambio${n>1?'s':''})`:''}`)}
+  }).catch(()=>{});
+
+  $('#q').addEventListener('input',e=>{state.q=e.target.value;render()});
+  $('#qclr').onclick=()=>{state.q='';$('#q').value='';render();$('#q').focus()};
+  $('#f-code').addEventListener('input',e=>{state.f.code=e.target.value;render()});
+  $('#x-code').onclick=()=>{state.f.code='';$('#f-code').value='';render()};
+  $('#s-cat').onclick=e=>openMulti(e.currentTarget,'cats');
+  $('#s-brand').onclick=e=>openMulti(e.currentTarget,'brands');
+  $('#s-loc').onclick=e=>openMulti(e.currentTarget,'locs');
+
+  $('#strip').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;const v=b.dataset.v;
+    if(v==='__all')state.f.cats.clear();else state.f.cats.has(v)?state.f.cats.delete(v):state.f.cats.add(v);render()});
+  $('#strip').addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){e.currentTarget.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
+  $('#locs').addEventListener('click',e=>{const b=e.target.closest('.loc');if(!b)return;const v=b.dataset.v;state.f.locs.has(v)?state.f.locs.delete(v):state.f.locs.add(v);render();closeSide()});
+
+  $('#bar').addEventListener('click',e=>{
+    const t=e.target.closest('[data-t]');
+    if(t){const k=t.dataset.t;if(k==='q'){state.q='';$('#q').value=''}else if(k==='code'){state.f.code='';$('#f-code').value=''}else{const i=k.indexOf(':');const d=k.slice(0,i),v=k.slice(i+1);state.f[d].delete(v)}render();return}
+    const b=e.target.closest('[data-b]');if(!b)return;const a=b.dataset.b;
+    if(a==='clear')clearFilters();
+    else if(a==='none'){state.sel.clear();render()}
+    else if(a==='edit')openBulkEdit();
+    else if(a==='del')confirmDelete(state.rows.filter(r=>state.sel.has(r._id)));
+    else if(a==='exp')exportCsv(state.rows.filter(r=>state.sel.has(r._id)),`maquinarias-seleccion-${stamp()}.csv`);
+  });
+  $('#empty').addEventListener('click',e=>{if(e.target.closest('[data-b="clear"]'))clearFilters()});
+
+  $('#thead').addEventListener('click',e=>{
+    if(e.target.closest('[data-all]')){const ids=shown.map(r=>r._id);const all=ids.length&&ids.every(i=>state.sel.has(i));ids.forEach(i=>all?state.sel.delete(i):state.sel.add(i));render();return}
+    const th=e.target.closest('[data-sort]');if(!th)return;const k=th.dataset.sort;
+    state.sort=state.sort.key===k?{key:k,dir:-state.sort.dir}:{key:k,dir:1};render();
+  });
+  $('#tbody').addEventListener('click',e=>{
+    const tr=e.target.closest('tr');if(!tr)return;const id=+tr.dataset.id;const row=state.rows.find(r=>r._id===id);if(!row)return;
+    const act=e.target.closest('[data-act]')?.dataset.act;
+    if(act==='edit'){openForm(row);return}
+    if(act==='del'){confirmDelete([row]);return}
+    const idx=shown.findIndex(r=>r._id===id);
+    if(e.shiftKey&&lastIdx!==null){const [a,b]=[Math.min(lastIdx,idx),Math.max(lastIdx,idx)];for(let i=a;i<=b;i++)state.sel.add(shown[i]._id)}
+    else{state.sel.has(id)?state.sel.delete(id):state.sel.add(id)}
+    lastIdx=idx;render();
+  });
+  $('#tbody').addEventListener('dblclick',e=>{if(e.target.closest('[data-act]'))return;const tr=e.target.closest('tr');if(!tr)return;const row=state.rows.find(r=>r._id===+tr.dataset.id);row&&openForm(row)});
+
+  const newU=()=>{closeSide();openForm(null)};
+  $('#btn-new').onclick=newU;$('#nav-new').onclick=newU;
+  $('#nav-exp').onclick=()=>{closeSide();exportCsv(view(),`maquinarias-${stamp()}.csv`)};
+  $('#nav-json').onclick=()=>{closeSide();exportDb()};
+  $('#nav-inv').onclick=()=>{closeSide();clearFilters()};
+  $('#nav-reset').onclick=()=>{closeSide();modal({title:'Restablecer datos',icon:'rotate-ccw',red:true,sm:true,body:'<p>Se descartan todos los cambios y se vuelve a la base original (se vuelve a leer del repositorio).</p>',
+    actions:[{label:'Cancelar',fn:o=>o.close()},{label:'Restablecer',kind:'danger',fn:o=>{state.rows=BASE_DB.units.map(fromUnit);state.dirty.clear();state.deleted.clear();state.baseVersion=BASE_DB.version;catIcons={};state.sel.clear();save();o.close();clearFilters();toast('Datos restablecidos')}}]})};
+
+  const side=$('#side'),scrim=$('#scrim');
+  function closeSide(){side.classList.remove('open');scrim.classList.remove('show')}
+  $('#hamb').onclick=()=>{side.classList.add('open');scrim.classList.add('show')};scrim.onclick=closeSide;
+
+  document.addEventListener('keydown',e=>{
+    const tg=e.target.tagName;
+    if(e.key==='/'&&tg!=='INPUT'&&!document.querySelector('.ov')){e.preventDefault();$('#q').focus()}
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#q').focus()}
+    if(e.key==='Escape'){if(pop)closePop();else if(e.target.id==='q'){$('#q').blur()}}
+  });
+  window.addEventListener('beforeunload',save);
+}
+init();
+</script>
+</body>
+</html>
