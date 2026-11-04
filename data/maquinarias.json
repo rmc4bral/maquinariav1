@@ -1,5 +1,5 @@
 {
- "version": 1,
+ "version": 2,
  "updated": "2026-11-04",
  "locations": [
   "EST. RINCON DE BAGUALES",
@@ -792,7 +792,7 @@
   },
   {
    "id": "M072",
-   "code": "RBCHI04",
+   "code": "CHIMANGO",
    "cat": "CHIMANGO",
    "brand": "BAIMA",
    "model": "BAIMA",
