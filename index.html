@@ -47,6 +47,7 @@ input{font:inherit;color:inherit}
 .nav.active{background:linear-gradient(90deg,rgba(62,224,178,.16),rgba(62,224,178,.05));color:#fff}
 .nav.active::after{content:"";position:absolute;right:0;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--mint)}
 .nav .badge{margin-left:auto;font-size:11px;font-weight:600;background:rgba(255,255,255,.10);padding:2px 8px;border-radius:6px;color:#fff}
+.nav .badge.idle,.nav .badge.ok{background:rgba(62,224,178,.2);color:var(--mint)}.nav .badge.saving{background:rgba(255,255,255,.14)}.nav .badge.error{background:rgba(229,72,77,.28);color:#ffc2c4}
 .nav svg{color:var(--side-muted)} .nav.active svg{color:var(--mint)}
 .locs{display:flex;flex-direction:column;gap:2px;min-height:0}
 .loc{display:flex;align-items:center;gap:10px;width:100%;padding:7px 12px;border-radius:6px;font-size:12.5px;color:var(--side-ink);text-align:left}
@@ -268,6 +269,7 @@ mark{background:rgba(62,224,178,.35);color:inherit;border-radius:3px;padding:0 1
     <div class="sec">Menú principal</div>
     <button class="nav active" id="nav-inv"><span data-ic="layers"></span>Inventario<span class="badge" id="nav-total">0</span></button>
     <button class="nav" id="nav-new"><span data-ic="plus"></span>Nueva unidad</button>
+    <button class="nav" id="nav-sync"><span data-ic="database"></span>Sincronización<span class="badge" id="sync-badge"></span></button>
     <button class="nav" id="nav-exp"><span data-ic="download"></span>Exportar CSV</button>
     <button class="nav" id="nav-json"><span data-ic="database"></span>Exportar base (JSON)</button>
     <button class="nav" id="nav-reset"><span data-ic="rotate-ccw"></span>Restablecer datos</button>
@@ -409,7 +411,91 @@ function exportDb(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,1)],{type:'application/json'}));a.download='maquinarias.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   toast('Base exportada (versión '+db.version+'). Subila a data/ del repositorio.');
 }
-function save(){try{localStorage.setItem(STORE,JSON.stringify({ver:3,baseVersion:state.baseVersion,dirty:[...state.dirty],deleted:[...state.deleted],rows:state.rows.map(({_s,...r})=>r),catIcons}))}catch(e){}}
+/* ===== Sincronización con el repositorio de GitHub ===== */
+const SYNC_KEY='inventario-sync-v1';
+const sync={repo:'rmc4bral/maquinariav1',branch:'main',path:'data/maquinarias.json',token:''};
+let syncTimer=null,syncBusy=false,syncState='off';
+try{Object.assign(sync,JSON.parse(localStorage.getItem(SYNC_KEY)||'{}'))}catch(e){}
+const saveSyncCfg=()=>{try{localStorage.setItem(SYNC_KEY,JSON.stringify(sync))}catch(e){}};
+const apiUrl=c=>`https://api.github.com/repos/${c.repo}/contents/${c.path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(c.branch)}`;
+const apiBase=c=>apiUrl(c).split('?')[0];
+const b64enc=t=>btoa(unescape(encodeURIComponent(t)));
+const b64dec=t=>decodeURIComponent(escape(atob(t.replace(/\s/g,''))));
+const ghHeaders=(c,raw)=>{const h={Accept:raw?'application/vnd.github.raw+json':'application/vnd.github+json'};if(c.token)h.Authorization='Bearer '+c.token;return h};
+async function fetchRemote(){
+  try{const r=await fetch(apiUrl(sync),{headers:ghHeaders(sync,true),cache:'no-store'});if(r.ok)return JSON.parse(await r.text())}catch(e){}
+  try{const r=await fetch('data/maquinarias.json?t='+Date.now(),{cache:'no-store'});if(r.ok)return await r.json()}catch(e){}
+  return null;
+}
+const httpErr=st=>st===401?'Token inválido o vencido':st===403?'El token no tiene permiso de escritura':st===404?'No se encontró el repositorio o el archivo':'Error '+st;
+async function pushChanges(){
+  for(let intento=0;intento<3;intento++){
+    const r=await fetch(apiUrl(sync),{headers:ghHeaders(sync,false),cache:'no-store'});
+    if(!r.ok)throw new Error(httpErr(r.status));
+    const meta=await r.json();const remote=JSON.parse(b64dec(meta.content));
+    const dirty=new Set(state.dirty),del=new Set(state.deleted);
+    const map=new Map(remote.units.map(u=>[u.id,u]));
+    del.forEach(id=>map.delete(id));
+    state.rows.forEach(row=>{if(dirty.has(row.id)){const u={id:row.id};FIELDS.forEach(k=>u[k]=row[k]);map.set(row.id,u)}});
+    const db={...remote,version:(remote.version||0)+1,updated:new Date().toISOString().slice(0,10),units:[...map.values()]};
+    const put=await fetch(apiBase(sync),{method:'PUT',headers:{...ghHeaders(sync,false),'Content-Type':'application/json'},body:JSON.stringify({message:'Inventario: actualización desde el dashboard [skip ci]',content:b64enc(JSON.stringify(db,null,1)),sha:meta.sha,branch:sync.branch})});
+    if(put.ok){dirty.forEach(i=>state.dirty.delete(i));del.forEach(i=>state.deleted.delete(i));state.baseVersion=db.version;save();return db}
+    if(put.status===409||put.status===422)continue;
+    throw new Error(httpErr(put.status));
+  }
+  throw new Error('Conflicto al guardar, reintentá');
+}
+function setSyncState(st,msg){
+  syncState=st;const b=document.getElementById('sync-badge');if(!b)return;
+  b.textContent={off:'Sin configurar',idle:'Activa',saving:'Guardando…',ok:'Guardado',error:'Error'}[st];b.className='badge '+st;b.title=msg||'';
+}
+function scheduleSync(){if(!sync.token)return;clearTimeout(syncTimer);syncTimer=setTimeout(syncNow,1200)}
+async function syncNow(){
+  if(!sync.token||syncBusy)return;
+  if(!state.dirty.size&&!state.deleted.size){if(syncState!=='ok')setSyncState('idle');return}
+  syncBusy=true;setSyncState('saving');
+  try{const db=await pushChanges();setSyncState('ok');toast('Guardado en el repositorio (versión '+db.version+')')}
+  catch(e){setSyncState('error',e.message);toast('No se pudo guardar en el repositorio: '+e.message)}
+  finally{syncBusy=false;if(syncState==='ok'&&(state.dirty.size||state.deleted.size))scheduleSync()}
+}
+async function startSync(){
+  setSyncState(sync.token?'idle':'off');
+  const db=await fetchRemote();const n=mergeRemote(db);
+  if(n!==null){render();toast(`Base actualizada a la versión ${db.version}${n?` (${n} cambio${n>1?'s':''})`:''}`)}
+  if(sync.token)syncNow();
+}
+function openSync(){
+  const body=`<form id="sform" novalidate><div class="grid2">
+    ${fieldHtml('s-repo','Repositorio (usuario/nombre)','placeholder="usuario/repositorio"',{full:1})}
+    ${fieldHtml('s-branch','Rama','placeholder="main"')}
+    ${fieldHtml('s-path','Archivo de datos','placeholder="data/maquinarias.json"')}
+    ${fieldHtml('s-token','Token de GitHub','type="password" placeholder="github_pat_…"',{full:1})}
+  </div><p class="note">El token se guarda solo en este dispositivo. Creá un token de acceso específico (GitHub → Settings → Developer settings → Fine-grained tokens), limitado a este repositorio, con el permiso “Contents: Read and write”.</p></form>`;
+  const acts=[{label:'Cancelar',fn:o=>o.close()}];
+  if(sync.token)acts.push({label:'Quitar token',fn:o=>{sync.token='';saveSyncCfg();setSyncState('off');o.close();toast('Sincronización desactivada en este dispositivo')}});
+  acts.push({label:'Guardar y probar',kind:'primary',fn:test});
+  const ov=modal({title:'Sincronización con GitHub',sub:'Guardá las altas y ediciones en el repositorio para verlas en todos tus dispositivos.',icon:'database',body,actions:acts});
+  const g=id=>$('#'+id,ov);
+  g('s-repo').value=sync.repo;g('s-branch').value=sync.branch;g('s-path').value=sync.path;g('s-token').value=sync.token;
+  $('#sform',ov).addEventListener('submit',e=>{e.preventDefault();test()});
+  $('#sform',ov).addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();test()}});
+  async function test(){
+    const c={repo:g('s-repo').value.trim(),branch:g('s-branch').value.trim()||'main',path:g('s-path').value.trim().replace(/^\/+/,''),token:g('s-token').value.trim()};
+    const err=$('[data-err="s-token"]',ov);err.textContent='';['s-repo','s-token'].forEach(i=>g(i).classList.remove('bad'));
+    if(!/^[\w.-]+\/[\w.-]+$/.test(c.repo)){g('s-repo').classList.add('bad');$('[data-err="s-repo"]',ov).textContent='Usá el formato usuario/repositorio.';return}
+    if(!c.token){g('s-token').classList.add('bad');err.textContent='Pegá el token de GitHub.';return}
+    err.textContent='Probando conexión…';
+    try{
+      const r=await fetch(apiUrl(c),{headers:ghHeaders(c,false),cache:'no-store'});
+      if(!r.ok)throw new Error(httpErr(r.status));
+      JSON.parse(b64dec((await r.json()).content));
+      const rr=await fetch(apiBase(c).replace(/\/contents\/.*$/,''),{headers:ghHeaders(c,false)});
+      if(rr.ok){const j=await rr.json();if(j.permissions&&j.permissions.push===false)throw new Error('El token no tiene permiso de escritura')}
+    }catch(e){g('s-token').classList.add('bad');err.textContent=e.message||'No se pudo conectar';return}
+    Object.assign(sync,c);saveSyncCfg();ov.close();setSyncState('idle');toast('Sincronización activa');syncNow();
+  }
+}
+function save(){try{localStorage.setItem(STORE,JSON.stringify({ver:3,baseVersion:state.baseVersion,dirty:[...state.dirty],deleted:[...state.deleted],rows:state.rows.map(({_s,...r})=>r),catIcons}))}catch(e){};scheduleSync()}
 
 /* ===================== Filtrado ===================== */
 function tokens(){return norm(state.q).split(/\s+/).filter(Boolean)}
@@ -755,9 +841,7 @@ function init(){
   $('#logo').innerHTML=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/><path d="M12 7.5 16.5 12 12 16.5 7.5 12z" fill="currentColor"/></svg>`;
   $('#hamb').innerHTML=ic('menu',20);$('#qclr').innerHTML=ic('x',16);$('#x-code').innerHTML=ic('x',15);
   load();render();
-  fetch('data/maquinarias.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(db=>{
-    const n=mergeRemote(db);if(n!==null){render();toast(`Base actualizada a la versión ${db.version}${n?` (${n} cambio${n>1?'s':''})`:''}`)}
-  }).catch(()=>{});
+  startSync();
 
   $('#q').addEventListener('input',e=>{state.q=e.target.value;render()});
   $('#qclr').onclick=()=>{state.q='';$('#q').value='';render();$('#q').focus()};
@@ -804,6 +888,7 @@ function init(){
   const newU=()=>{closeSide();openForm(null)};
   $('#btn-new').onclick=newU;$('#nav-new').onclick=newU;
   $('#nav-exp').onclick=()=>{closeSide();exportCsv(view(),`maquinarias-${stamp()}.csv`)};
+  $('#nav-sync').onclick=()=>{closeSide();openSync()};
   $('#nav-json').onclick=()=>{closeSide();exportDb()};
   $('#nav-inv').onclick=()=>{closeSide();clearFilters()};
   $('#nav-reset').onclick=()=>{closeSide();modal({title:'Restablecer datos',icon:'rotate-ccw',red:true,sm:true,body:'<p>Se descartan todos los cambios y se vuelve a la base original (se vuelve a leer del repositorio).</p>',
