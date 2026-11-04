@@ -163,8 +163,8 @@ thead th .th .ic{opacity:.35} thead th.sorted .th .ic{opacity:1;color:var(--gree
 tbody td{padding:0 12px;height:36px;font-size:12px;border-bottom:1px solid var(--line-2);white-space:nowrap}
 tbody tr{transition:background .12s;cursor:default}
 tbody tr:hover{background:#f6fbf8}
-tbody tr.sel{background:var(--green-soft)}
-tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--green)}
+tbody tr.is-sel{background:var(--green-soft)}
+tbody tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--green)}
 td.c-chk,th.c-chk{width:44px;padding-right:0}
 td.c-code{font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.2px}
 td.mut{color:var(--muted)}
@@ -543,7 +543,7 @@ function renderTable(){
   $('#thead').innerHTML=`<th class="c-chk"><button class="chk ${hc}" data-all role="checkbox" aria-checked="${hc==='on'?'true':hc==='mix'?'mixed':'false'}" aria-label="Seleccionar todas las filas visibles">${ic('check',11)}</button></th>`+
     COLS.map(([k,t])=>{const s=state.sort.key===k;return `<th class="s ${s?'sorted':''}" data-sort="${k}" aria-sort="${s?(state.sort.dir>0?'ascending':'descending'):'none'}"><span class="th">${t}${ic(s?(state.sort.dir>0?'arrow-up':'arrow-down'):'arrow-up-down',11)}</span></th>`}).join('')+`<th class="c-act"></th>`;
   $('#tbody').innerHTML=shown.map(r=>{const s=state.sel.has(r._id);
-    return `<tr data-id="${r._id}" class="${s?'sel':''}"><td class="c-chk"><button class="chk ${s?'on':''}" data-act="sel" role="checkbox" aria-checked="${s}" aria-label="Seleccionar ${esc(r.code)}">${ic('check',11)}</button></td>
+    return `<tr data-id="${r._id}" class="${s?'is-sel':''}"><td class="c-chk"><button class="chk ${s?'on':''}" data-act="sel" role="checkbox" aria-checked="${s}" aria-label="Seleccionar ${esc(r.code)}">${ic('check',11)}</button></td>
     <td class="c-code">${hl(r.code)}</td>
     <td><span class="catpill"><i>${ic(catIcon(r.cat),11)}</i>${hl(r.cat)}</span></td>
     <td>${r.brand?hl(r.brand):'<span class="mut">—</span>'}</td>
